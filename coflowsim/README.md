@@ -1,4 +1,4 @@
-# CoflowSim README
+# FJW CoflowSim README
 
 **CoflowSim** is a flow-level simulator to compare various coflow scheduling heurisitcs against traditional per-flow scheduling techniques. 
 
