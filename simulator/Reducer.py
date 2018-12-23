@@ -10,12 +10,13 @@ class Reducer:
     def __init__(self, reducer_name, total_bytes):
         self.reducerName = reducer_name
         self.reducerID = Reducer.TotalReducerNum
-        self.reducerActive = 0
+        self.reducerActive = Constants.UNSUBMITTED
         self.finishTime = Constants.MAXTIME
         self.dag = nx.DiGraph()
         self.flowList = []
         self.compuList = []
         self.totalBytes = total_bytes
+        Reducer.TotalReducerNum += 1
 
 
     def set_attributes(self, location_id, start_time, mapper_list):
