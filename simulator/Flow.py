@@ -1,10 +1,13 @@
 import Constants
 
 class Flow:
+    TotalFlowNum = 0
 
-    def __init__(self, flow_name, flow_id):
+    def __init__(self, flow_name, parent_reducer):
         self.flowName = flow_name
-        self.flowID = flow_id
+        self.flowID = Flow.TotalFlowNum
+        self.parentReducer = parent_reducer
+        Flow.TotalFlowNum += 1
         
     def set_attributes(self, src_id, dst_id, flow_size, start_time):
         self.srcID = src_id

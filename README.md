@@ -4,4 +4,4 @@ a more detailed abstraction of flows compared to CoFlow
 2. multiple applications
 
 Dependency
-1. python-igraph
+1. networkx 2.2 

@@ -2,14 +2,16 @@ import Constants
 from Flow import Flow
 from Compu import Compu
 import networkx as nx
+import random
 
 class Reducer:
-    def __init__(self, reducer_name, reducer_id, total_bytes):
+    TotalReducerNum = 0
+    def __init__(self, reducer_name, total_bytes):
         self.reducerName = reducer_name
-        self.reducerID = reducer_id
+        self.reducerID = Reducer.TotalReducerNum
         self.reducerActive = 0
         self.finishTime = Constants.MAXTIME
-        self.dag = nx.Graph()
+        self.dag = nx.DiGraph()
         self.flowList = []
         self.compuList = []
         self.totalBytes = total_bytes
@@ -19,16 +21,50 @@ class Reducer:
         self.locationID = location_id
         self.startTime = start_time
         self.mapperList = mapper_list
-        for i in range(0, len(mapper_list)):
-            self.__addFlow(i, self.mapperList[i], self.totalBytes/len(self.mapperList))
-        
-        
-    def __addFlow(self, flow_id, src_id, flow_size):
-        f = Flow("tt", flow_id)
-        self.flowList.append(f)
+        self.mapperNum = len(self.mapperList)
 
 
-r = Reducer("11", 5, 100)
-r.set_attributes(5, 100, [1,2])
+    def addTasks(self, compu_num):
+        self.__addFlows()
+        self.__addCompus(compu_num)
+        
+    def __addFlows(self):
+        for i in range(0, self.mapperNum):
+            f = Flow("F" + self.reducerName[1:] + "-" + str(i), self)
+            f.set_attributes(self.mapperList[i], self.locationID, self.totalBytes/self.mapperNum, self.startTime)
+            self.flowList.append(f)
+        self.dag.add_nodes_from(self.flowList)
+    
+    def __addCompus(self, compu_num):
+        for i in range(0, compu_num):
+            c = Compu("C" + self.reducerName[1:] + "-" + str(i), self)
+            c.set_attributes(self.locationID, random.randint(10, 100))
+            self.compuList.append(c)
+        self.dag.add_nodes_from(self.compuList)
+
+    def bindDag(self, dag_type):
+        if dag_type == "DNN":
+            assert len(self.compuList) == 2*len(self.flowList), "For DNN reducer, a wrong number of compu tasks"
+            self.__bindDnnDag()
+        else:
+            self.__bindDnnDag()
+
+    def __bindDnnDag(self):
+        self.dag.add_edge(self.flowList[0],self.flowList[1])
+        pass
+
+
+
+
+r = Reducer("R-0-0", 100)
+r.set_attributes(5, 100, [1,2,3])
+r.addTasks(6)
 print(r.flowList)
-        
+print(r.flowList[1].flowID)
+print(list(r.dag.nodes))
+for node in list(r.dag.nodes):
+    if isinstance(node, Flow):
+        print(node.flowSize)
+print(list(r.dag.edges))
+r.bindDag(Constants.DNNDAG)
+print(list(r.dag.edges))
