@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 class Reducer:
     TotalReducerNum = 0
-    def __init__(self, reducer_name, total_bytes):
+    def __init__(self, reducer_name, total_bytes, parent_job):
         self.reducerName = reducer_name
         self.reducerID = Reducer.TotalReducerNum
         self.reducerActive = Constants.UNSUBMITTED
@@ -16,6 +16,7 @@ class Reducer:
         self.flowList = []
         self.compuList = []
         self.totalBytes = total_bytes
+        self.parentJob = parent_job
         Reducer.TotalReducerNum += 1
 
 
