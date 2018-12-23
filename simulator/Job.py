@@ -1,5 +1,4 @@
 import Constants
-import Constants
 from Flow import Flow
 from Compu import Compu
 from Reducer import Reducer
@@ -16,8 +15,18 @@ class Job:
         self.startTime = Constants.MAXTIME
         self.finishTime = Constants.MAXTIME
         self.flowFinishTime = Constants.MAXTIME
-        reducerList = []
+        self.reducerList = []
         Job.TotalJobNum += 1
     
-    def set_attributes(self):
-        pass
+    def set_attributes(self, submit_time, mapper_list, reducer_list, data_size_list):
+        self.submitTime = submit_time
+        self.mapperList = mapper_list
+        for i in range(0, len(reducer_list)):
+            r = Reducer("R"+self.jobName[1:] +"-"+str(i), data_size_list[i])
+            self.reducerList.append(r)
+
+
+j = Job("J-0")
+j.set_attributes(100, [1,2],[3,4],[100,300])
+for i in j.reducerList:
+    print(i.reducerName)

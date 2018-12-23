@@ -65,7 +65,7 @@ class Reducer:
         nx.draw(self.dag, labels=labels, with_labels=True)
         plt.show()
 
-
+'''
 r = Reducer("R-0-0", 100)
 r.set_attributes(5, 100, [1,2,3])
 r.addTasks(6)
@@ -78,3 +78,4 @@ for node in list(r.dag.nodes):
 r.bindDag(Constants.DNNDAG)
 
 r.plotDag()
+'''
