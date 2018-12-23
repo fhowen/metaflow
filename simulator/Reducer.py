@@ -3,6 +3,7 @@ from Flow import Flow
 from Compu import Compu
 import networkx as nx
 import random
+import matplotlib.pyplot as plt
 
 class Reducer:
     TotalReducerNum = 0
@@ -33,14 +34,16 @@ class Reducer:
             f = Flow("F" + self.reducerName[1:] + "-" + str(i), self)
             f.set_attributes(self.mapperList[i], self.locationID, self.totalBytes/self.mapperNum, self.startTime)
             self.flowList.append(f)
-        self.dag.add_nodes_from(self.flowList)
+            self.dag.add_node(f, mark=f.flowName)
+        #self.dag.add_nodes_from(self.flowList)
     
     def __addCompus(self, compu_num):
         for i in range(0, compu_num):
             c = Compu("C" + self.reducerName[1:] + "-" + str(i), self)
             c.set_attributes(self.locationID, random.randint(10, 100))
             self.compuList.append(c)
-        self.dag.add_nodes_from(self.compuList)
+            self.dag.add_node(c, mark=c.compuName)
+        #self.dag.add_nodes_from(self.compuList)
 
     def bindDag(self, dag_type):
         if dag_type == "DNN":
@@ -50,10 +53,16 @@ class Reducer:
             self.__bindDnnDag()
 
     def __bindDnnDag(self):
-        self.dag.add_edge(self.flowList[0],self.flowList[1])
-        pass
+        for i in range(0, len(self.compuList)-1):
+            self.dag.add_edge(self.compuList[i],self.compuList[i+1])
+        for i in range(0, len(self.flowList)):
+            self.dag.add_edge(self.flowList[i], self.compuList[i])
 
 
+    def plotDag(self):
+        labels = nx.get_node_attributes(self.dag,'mark')
+        nx.draw(self.dag, labels=labels, with_labels=True)
+        plt.show()
 
 
 r = Reducer("R-0-0", 100)
@@ -61,10 +70,10 @@ r.set_attributes(5, 100, [1,2,3])
 r.addTasks(6)
 print(r.flowList)
 print(r.flowList[1].flowID)
-print(list(r.dag.nodes))
+print(list(r.dag.nodes(data=True)))
 for node in list(r.dag.nodes):
     if isinstance(node, Flow):
-        print(node.flowSize)
-print(list(r.dag.edges))
+        print(node)
 r.bindDag(Constants.DNNDAG)
-print(list(r.dag.edges))
+
+r.plotDag()
