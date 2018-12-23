@@ -25,6 +25,9 @@ class Reducer:
         self.startTime = start_time
         self.mapperList = mapper_list
         self.mapperNum = len(self.mapperList)
+        # compu tasks number  
+        self.addTasks(6)
+        self.bindDag(Constants.DNNDAG)
 
 
     def addTasks(self, compu_num):

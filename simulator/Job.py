@@ -23,6 +23,7 @@ class Job:
         self.mapperList = mapper_list
         for i in range(0, len(reducer_list)):
             r = Reducer("R"+self.jobName[1:] +"-"+str(i), data_size_list[i], self)
+            r.set_attributes(reducer_list[i], self.submitTime, mapper_list)
             self.reducerList.append(r)
 
 '''
