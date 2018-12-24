@@ -34,7 +34,7 @@ class Reducer:
     def genTasks(self, compu_num):
         self.__addFlows()
         self.__addCompus(compu_num)
-        self.bindDag(Constants.DNNDAG)
+        
         
     def __addFlows(self):
         for i in range(0, self.mapperNum):
@@ -118,18 +118,37 @@ class Reducer:
                 return i
         return NULL
         
-    '''
+    
     def txt2Dag(self):
         base_dir = os.getcwd()
         file_name = os.path.join(base_dir, 'dags', self.reducerName + ".txt")
+        print("Read file %s"%(file_name))
         f_open = open(file_name, 'r')
         #first line, number of compu tasks
-        self.__addCompus(int(f_open.readline().strip()))
-        for i in range(0, len(self.flowList) + len(self.compuList)):
-
-        print(compu_num)
+        self.genTasks(int(f_open.readline().strip()))
+        # each line for each flow node in dag, assign size and relationships
+        for i in range(0, len(self.flowList)):
+            line = f_open.readline().strip()
+            sp_line = line.split(' ')
+            node = self.getNodeByMark(sp_line[0])
+            node.flowSize = float(sp_line[1])
+            if len(sp_line) > 2:
+                for child in sp_line[2:]:
+                    child_node = self.getNodeByMark(child)
+                    self.dag.add_edge(node, child_node)
+        # each line for each compu node in dag, assign size and relationships
+        for i in range(0, len(self.compuList)):
+            line = f_open.readline().strip()
+            sp_line = line.split(' ')
+            node_size = sp_line[1]
+            node = self.getNodeByMark(sp_line[0])
+            node.compuSize = float(sp_line[1])
+            if len(sp_line) > 2:
+                for child in sp_line[2:]:
+                    child_node = self.getNodeByMark(child)
+                    self.dag.add_edge(node, child_node)
         f_open.close()
-    '''
+    
 
 '''
 r = Reducer("R-0-0", 100)

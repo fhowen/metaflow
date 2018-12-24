@@ -8,7 +8,6 @@ import random
 import os
 
 class JobSet:
-    TotalJobSetNum = 0
     def __init__(self):
         self.jobsList = []
     
@@ -17,6 +16,7 @@ class JobSet:
         j.set_attributes(submit_time, mapper_list, reducer_list, data_size_list)
         self.jobsList.append(j)
 
+    # read coflow trace and add jobs
     def readTrace(self):
         base_dir = os.getcwd()
         f_name = os.path.join(base_dir, '', "coflow_trace.txt")
@@ -46,26 +46,32 @@ class JobSet:
             self.addJob(submit_time, mapper_list, reducer_list, data_size_list)
         f.close()
     
+
+    # generate dag relationship and task size
     def genDag(self):
         for j in self.jobsList:
             for r in j.reducerList:
                 r.genTasks(2*len(r.mapperList))
+                r.bindDag(Constants.DNNDAG)
 
+    # store dag to .dot and .txt file
     def storeDag(self):
         for j in self.jobsList:
             for r in j.reducerList:
                 #r.dag2Dot()
                 r.dag2Txt()
 
+    # read dag from txt file
     def readDag(self):
-        pass
+        for j in self.jobsList:
+            for r in j.reducerList:
+                r.txt2Dag()
 
 js = JobSet()
 js.readTrace()
 print(Flow.TotalFlowNum)
-js.genDag()
+js.readDag()
 print(Flow.TotalFlowNum)
-js.storeDag()
 '''
 js.addJob(100, [1,2,3],[4,5,6],[100,200,300])
 for i in js.jobsList:
