@@ -22,4 +22,14 @@ class JobSet:
 js = JobSet()
 js.addJob(100, [1,2,3],[4,5,6],[100,200,300])
 for i in js.jobsList:
-    print(i.reducerList[0].flowList[1].flowSize)
+    #i.reducerList[0].plotDag()cd ..
+    for j in i.reducerList:
+        #j.dag2Dot()
+        print("===========")
+        print(j.flowList[0])
+        j.dag2Txt()
+        for m in j.dag.neighbors(j.flowList[0]):
+            print(m)
+
+node = js.jobsList[0].reducerList[0].getNodeByMark("F-0-0-0")
+print(node)

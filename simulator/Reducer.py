@@ -4,6 +4,7 @@ from Compu import Compu
 import networkx as nx
 import random
 import matplotlib.pyplot as plt
+import os
 
 class Reducer:
     TotalReducerNum = 0
@@ -68,6 +69,62 @@ class Reducer:
         labels = nx.get_node_attributes(self.dag,'mark')
         nx.draw(self.dag, labels=labels, with_labels=True)
         plt.show()
+    
+    def dag2Dot(self):
+        base_dir = os.getcwd()
+        file_name = os.path.join(base_dir, 'dags', self.reducerName + ".dot")
+        f_open = open(file_name, 'w')
+        f_open.write('digraph g {\n')
+        marks = nx.get_node_attributes(self.dag,'mark')
+        for i,j in self.dag.edges():
+            f_open.write('\t'+"\"" +marks[i] +"\""+ '->' +"\""+marks[j] +"\""+ '\n')
+        f_open.write('}\n')
+        f_open.close()
+    
+    def dag2Txt(self):
+        marks = nx.get_node_attributes(self.dag,'mark')
+        base_dir = os.getcwd()
+        file_name = os.path.join(base_dir, 'dags', self.reducerName + ".txt")
+        f_open = open(file_name, 'w')
+        f_open.write(str(len(self.compuList)) + '\n')
+        for i in self.flowList:
+            temp_str = i.flowName
+            temp_str += " "
+            temp_str += str(i.flowSize)
+            for j in self.compuList:
+                if self.dag.has_edge(i,j):
+                    temp_str += " "
+                    temp_str += j.compuName
+            temp_str += "\n"
+            f_open.write(temp_str)
+        for i in self.compuList:
+            temp_str = i.compuName
+            temp_str += " "
+            temp_str += str(i.compuSize)
+            for j in self.compuList:
+                if self.dag.has_edge(i,j):
+                    temp_str += " "
+                    temp_str += j.compuName
+            temp_str += "\n"
+            f_open.write(temp_str)
+
+        f_open.close()
+        
+    def getNodeByMark(self, mark_str):
+        marks = nx.get_node_attributes(self.dag,'mark')
+        for i in self.dag.nodes():
+            if marks[i] == mark_str:
+                return i
+        return NULL
+        
+    def txt2Dag(self):
+        pbase_dir = os.getcwd()
+        file_name = os.path.join(base_dir, 'dags', self.reducerName + ".txt")
+        f_open = open(file_name, 'r')
+        f_open.close()
+        #first line, number of compu tasks
+
+
 
 '''
 r = Reducer("R-0-0", 100)
