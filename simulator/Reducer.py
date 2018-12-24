@@ -27,13 +27,14 @@ class Reducer:
         self.mapperList = mapper_list
         self.mapperNum = len(self.mapperList)
         # compu tasks number  
-        self.addTasks(6)
-        self.bindDag(Constants.DNNDAG)
+        #self.addTasks(2*len(mapper_list))
+        #self.bindDag(Constants.DNNDAG)
 
 
-    def addTasks(self, compu_num):
+    def genTasks(self, compu_num):
         self.__addFlows()
         self.__addCompus(compu_num)
+        self.bindDag(Constants.DNNDAG)
         
     def __addFlows(self):
         for i in range(0, self.mapperNum):
@@ -117,14 +118,18 @@ class Reducer:
                 return i
         return NULL
         
+    '''
     def txt2Dag(self):
-        pbase_dir = os.getcwd()
+        base_dir = os.getcwd()
         file_name = os.path.join(base_dir, 'dags', self.reducerName + ".txt")
         f_open = open(file_name, 'r')
-        f_open.close()
         #first line, number of compu tasks
+        self.__addCompus(int(f_open.readline().strip()))
+        for i in range(0, len(self.flowList) + len(self.compuList)):
 
-
+        print(compu_num)
+        f_open.close()
+    '''
 
 '''
 r = Reducer("R-0-0", 100)

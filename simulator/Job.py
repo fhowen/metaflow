@@ -6,7 +6,8 @@ from Reducer import Reducer
 import random
 
 class Job:
-    TotalJobNum = 0
+    #job index from 1
+    TotalJobNum = 1
     def __init__(self):
         self.jobName = "J-" + str(Job.TotalJobNum)
         self.jobID = Job.TotalJobNum

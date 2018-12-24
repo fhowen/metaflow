@@ -1,7 +1,8 @@
 import sys
 
 MAXTIME = sys.maxsize
-
+MACHINENUM = 150
+JOBNUM = 526
 
 
 # dag tye strings
