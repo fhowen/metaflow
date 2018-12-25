@@ -67,11 +67,7 @@ class JobSet:
             for r in j.reducerList:
                 r.txt2Dag()
 
-js = JobSet()
-js.readTrace()
-print(Flow.TotalFlowNum)
-js.readDag()
-print(Flow.TotalFlowNum)
+
 '''
 js.addJob(100, [1,2,3],[4,5,6],[100,200,300])
 for i in js.jobsList:

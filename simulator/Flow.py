@@ -7,6 +7,9 @@ class Flow:
         self.flowName = flow_name
         self.flowID = Flow.TotalFlowNum
         self.parentReducer = parent_reducer
+        self.parentJob = self.parentReducer.parentJob
+        self.alpha = 0
+        self.beta = 0
         Flow.TotalFlowNum += 1
         
     def set_attributes(self, src_id, dst_id, flow_size, start_time):
