@@ -65,6 +65,29 @@ class Reducer:
         for i in range(0, len(self.flowList)):
             self.dag.add_edge(self.flowList[i], self.compuList[i])
 
+    def initAlphaBeta(self):
+        self.__initFlowsAlpha()
+        self.__initFlowsBeta()
+
+    def __initFlowsAlpha(self):
+        self.dag.add_node("End_node",mark="End")
+        for i in self.compuList:
+            self.dag.add_edge(i, self.getNodeByMark("End"))
+        for i in self.flowList:
+            p_list = nx.all_simple_paths(self.dag, source=i, target=self.getNodeByMark("End"))
+            max_rank = 0
+            for j in p_list:
+                if len(j)>max_rank:
+                    max_rank = len(j)
+            i.alpha = max_rank - 1
+        for i in self.compuList:
+            self.dag.remove_edge(i, self.getNodeByMark("End"))
+        self.dag.remove_node(self.getNodeByMark("End"))
+        
+    def __initFlowsBeta(self):
+        for i in self.flowList:
+            i.beta = i.remainSize
+
 
     def plotDag(self):
         labels = nx.get_node_attributes(self.dag,'mark')
@@ -151,16 +174,13 @@ class Reducer:
     
 
 '''
-r = Reducer("R-0-0", 100)
+r = Reducer("R-0-0", 100, "pj")
 r.set_attributes(5, 100, [1,2,3])
-r.addTasks(6)
+r.genTasks(6)
 print(r.flowList)
-print(r.flowList[1].flowID)
-print(list(r.dag.nodes(data=True)))
-for node in list(r.dag.nodes):
-    if isinstance(node, Flow):
-        print(node)
+#print(r.flowList[1].flowID)
 r.bindDag(Constants.DNNDAG)
+
 
 r.plotDag()
 '''
