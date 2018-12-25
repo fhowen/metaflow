@@ -55,6 +55,7 @@ class Reducer:
     def bindDag(self, dag_type):
         if dag_type == "DNN":
             assert len(self.compuList) == 2*len(self.flowList), "For DNN reducer, a wrong number of compu tasks"
+            self.dagType = Constants.DNNDAG
             self.__bindDnnDag()
         else:
             self.__bindDnnDag()
@@ -70,6 +71,12 @@ class Reducer:
         self.__initFlowsBeta()
 
     def __initFlowsAlpha(self):
+        if self.dagType == Constants.DNNDAG:
+            for i in range(0, self.mapperNum):
+                self.flowList[i].alpha = 2*self.mapperNum - i
+        else:
+            pass
+        '''
         self.dag.add_node("End_node",mark="End")
         for i in self.compuList:
             self.dag.add_edge(i, self.getNodeByMark("End"))
@@ -83,6 +90,7 @@ class Reducer:
         for i in self.compuList:
             self.dag.remove_edge(i, self.getNodeByMark("End"))
         self.dag.remove_node("End_node")
+        '''
         
     def __initFlowsBeta(self):
         for i in self.flowList:

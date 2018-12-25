@@ -56,7 +56,7 @@ class JobSet:
             for r in j.reducerList:
                 r.genTasks(2*len(r.mapperList))
                 r.bindDag(Constants.DNNDAG)
-                #r.initAlphaBeta()
+                r.initAlphaBeta()
 
     # store dag to .dot and .txt file
     def storeDag(self):
