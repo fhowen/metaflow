@@ -8,6 +8,7 @@ class Flow:
         self.flowID = Flow.TotalFlowNum
         self.parentReducer = parent_reducer
         self.parentJob = self.parentReducer.parentJob
+        # max number of compu tasks from this flow node to end
         self.alpha = 0
         self.beta = 0
         Flow.TotalFlowNum += 1

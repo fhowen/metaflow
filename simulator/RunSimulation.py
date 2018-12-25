@@ -3,7 +3,7 @@ from Flow import Flow
 from Compu import Compu
 from Reducer import Reducer
 from Job import Job
-
+from JobSet import JobSet
 
 
 
@@ -11,5 +11,5 @@ from Job import Job
 js = JobSet()
 js.readTrace()
 print(Flow.TotalFlowNum)
-js.readDag()
+js.genDag()
 print(Flow.TotalFlowNum)
