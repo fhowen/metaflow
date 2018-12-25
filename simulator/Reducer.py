@@ -82,7 +82,7 @@ class Reducer:
             i.alpha = max_rank - 1
         for i in self.compuList:
             self.dag.remove_edge(i, self.getNodeByMark("End"))
-        self.dag.remove_node(self.getNodeByMark("End"))
+        self.dag.remove_node("End_node")
         
     def __initFlowsBeta(self):
         for i in self.flowList:

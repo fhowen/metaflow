@@ -49,11 +49,14 @@ class JobSet:
 
     # generate dag relationship and task size
     def genDag(self):
+        i = 0
         for j in self.jobsList:
+            i += 1
+            print(i)
             for r in j.reducerList:
                 r.genTasks(2*len(r.mapperList))
                 r.bindDag(Constants.DNNDAG)
-                r.initAlphaBeta()
+                #r.initAlphaBeta()
 
     # store dag to .dot and .txt file
     def storeDag(self):
