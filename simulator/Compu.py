@@ -17,9 +17,10 @@ class Compu:
         self.finishTime = Constants.MAXTIME
         self.remainSize = compu_size
         self.currentCps = 0
-        
+
     def is_ready(self):
-        for p_node in nx.ancestors(self.parentReducer.dag, self):
+        #for p_node in nx.ancestors(self.parentReducer.dag, self):
+        for p_node in self.parentReducer.dag.pred[self]:
             if p_node.remainSize <= Constants.ZERO:
                 continue
             else:
