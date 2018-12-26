@@ -7,10 +7,10 @@ class Simulator:
         self.active_jobs = []
         self.active_flows = []
         self.active_Compus = []
-        self.CURRENT_TIME = 0
         self.sendBpsFree = []
         self.recvBpsFree = []
         self.rockCpsFree = []
+        self.CURRENT_TIME = 0
 
     def ActiveJobAdd(self, job):
         #我们这里直接按照Job的时间顺序进行插入，后面可能设计到其他的插入排序方法
@@ -18,6 +18,10 @@ class Simulator:
         #对添加的job中的reducer设置为active
         for i in range(len(job.reducerList)):
             job.reducerList[i].reducerActive = Constants.SUBMITTED
+    
+    def SortActiveFLows(self):
+        self.active_flows.sort(key=lambda x:(self.active_jobs.index(x.parentJob),-x.alpha,x.beta))
+
 
     def simulate(self, EPOCH_IN_MILLIS):
         curJob = 0
@@ -25,7 +29,12 @@ class Simulator:
         while self.CURRENT_TIME<Constants.MAXTIME and (curJob<TOTAL_JOBS or self.numActiveJobs>0):
             #for debug
             if self.CURRENT_TIME > 15000: break
-            
+
+            self.active_flows = []
+            self.active_Compus = []
+            self.sendBpsFree = []
+            self.recvBpsFree = []
+            self.rockCpsFree = []
             jobsAdded = 0
             #step1 : 添加新时间窗口的JOB，并将job和他包括的reducetask设置为submitted
             while curJob<TOTAL_JOBS:
@@ -38,7 +47,7 @@ class Simulator:
                 self.ActiveJobAdd(job)
                 curJob = curJob + 1
             #step2 ：将active_jobs中的flows和依赖完成的compu展开排序
-            for ajob in active_jobs:
+            for ajob in self.active_jobs:
                 for rtask in ajob.reducerList:
                     if rtask.reducerActive == Constants.SUBMITTED \
                         or rtask.reducerActive == Constants.STARTED:
@@ -47,9 +56,16 @@ class Simulator:
                                 flow.beta = flow.remainSize
                                 self.active_flows.append(flow)
                         for compu in rtask.compuList:
-                            
-                        
-
+                            isready = compu.is_ready()
+                            if  compu.remainSize > Constants.ZERO and isready:
+                                self.active_Compus.append(compu)
+            print("*****排序前*****")
+            for flow in self.active_flows:
+                print(flow.flowName,self.active_jobs.index(flow.parentJob),flow.alpha, flow.beta)
+            self.SortActiveFLows()
+            print("*****排序后*****")
+            for flow in self.active_flows:
+                print(flow.flowName,self.active_jobs.index(flow.parentJob),flow.alpha, flow.beta)
             self.CURRENT_TIME = self.CURRENT_TIME + EPOCH_IN_MILLIS
         
 
