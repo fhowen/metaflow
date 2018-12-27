@@ -47,7 +47,8 @@ class Reducer:
     def __addCompus(self, compu_num):
         for i in range(0, compu_num):
             c = Compu("C" + self.reducerName[1:] + "-" + str(i), self)
-            c.set_attributes(self.locationID, random.randint(10, 100))
+            # fixed compu size 
+            c.set_attributes(self.locationID, 10*(i%3 + 2))
             self.compuList.append(c)
             self.dag.add_node(c, mark=c.compuName)
         #self.dag.add_nodes_from(self.compuList)

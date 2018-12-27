@@ -10,6 +10,7 @@ RACK_COMP_PER_SEC = 10.0
 
 # dag tye strings
 DNNDAG = "DNN"
+WEBDAG = "WEB"
 RANDOMDAG = "RANDOM"
 
 # task status used for isActive
