@@ -7,6 +7,7 @@ class Compu:
     def __init__(self, compu_name, parent_reducer):
         self.compuName = compu_name
         self.parentReducer = parent_reducer
+        self.parentJob = self.parentReducer.parentJob
         self.compuID = Compu.TotalCompuNum
         Compu.TotalCompuNum += 1
     
