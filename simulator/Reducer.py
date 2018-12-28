@@ -40,7 +40,7 @@ class Reducer:
     def __addFlows(self):
         for i in range(0, self.mapperNum):
             f = Flow("F" + self.reducerName[1:] + "-" + str(i), self)
-            f.set_attributes(self.mapperList[i], self.locationID, self.totalBytes/self.mapperNum, self.startTime)
+            f.set_attributes(self.mapperList[i], self.locationID, self.totalBytes/self.mapperNum, self.submitTime)
             self.flowList.append(f)
             self.dag.add_node(f, mark=f.flowName)
         #self.dag.add_nodes_from(self.flowList)

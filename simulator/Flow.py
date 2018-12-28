@@ -11,13 +11,14 @@ class Flow:
         # max number of compu tasks from this flow node to end
         self.alpha = 0
         self.beta = 0
+        self.startTime = Constants.MAXTIME
         Flow.TotalFlowNum += 1
         
-    def set_attributes(self, src_id, dst_id, flow_size, start_time):
+    def set_attributes(self, src_id, dst_id, flow_size, submit_time):
         self.srcID = src_id
         self.dstID = dst_id
         self.flowSize = flow_size
-        self.startTime = start_time
+        self.submitTime = submit_time
         self.finishTime = Constants.MAXTIME
         self.currentBps = 0
         self.remainSize = flow_size
