@@ -4,12 +4,13 @@ from Compu import Compu
 from Reducer import Reducer
 from Job import Job
 from JobSet import JobSet
+from Simulator import Simulator
 
 
 js = JobSet()
 js.readTrace()
-print(Flow.TotalFlowNum)
+#print(Flow.TotalFlowNum)
 js.genDag()
-print(Flow.TotalFlowNum)
-test_c = js.jobsList[0].reducerList[0].compuList[0]
-print(test_c.is_ready())
+#print(Flow.TotalFlowNum)
+simu = Simulator(js)
+simu.simulate(1000)

@@ -40,6 +40,7 @@ class Simulator:
             self.active_flows = []
             self.active_Compus = []
             jobsAdded = 0
+            print(self.CURRENT_TIME/1000)
             #step1 : 添加新时间窗口的JOB，并将job和他包括的reducetask设置为submitted
             while curJob<TOTAL_JOBS:
                 job = self.jobset.jobsList[curJob]
