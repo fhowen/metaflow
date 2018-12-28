@@ -83,7 +83,7 @@ class Simulator:
                     self.sendBpsFree[SendRack] = self.sendBpsFree[SendRack] - flow.currentBps
                     self.recvBpsFree[RecvRack] = self.recvBpsFree[RecvRack] - flow.currentBps
             for comp in self.active_Compus:
-                RackId = comp.compuID
+                RackId = comp.locationID
                 supportCps = self.rockCpsFree[RackId]
                 comp.currentCps = 0.0
                 if supportCps > Constants.ZERO:
