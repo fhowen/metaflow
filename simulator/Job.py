@@ -16,6 +16,7 @@ class Job:
         self.startTime = Constants.MAXTIME
         self.finishTime = Constants.MAXTIME
         self.flowFinishTime = Constants.MAXTIME
+        self.finReducerNum = 0
         self.reducerList = []
         Job.TotalJobNum += 1
     

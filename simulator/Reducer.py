@@ -19,6 +19,8 @@ class Reducer:
         self.totalBytes = total_bytes
         self.parentJob = parent_job
         self.startTime = Constants.MAXTIME
+        self.finFlowNum = 0
+        self.finCompuNum = 0
         Reducer.TotalReducerNum += 1
 
 
