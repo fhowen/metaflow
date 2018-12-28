@@ -18,12 +18,13 @@ class Reducer:
         self.compuList = []
         self.totalBytes = total_bytes
         self.parentJob = parent_job
+        self.startTime = Constants.MAXTIME
         Reducer.TotalReducerNum += 1
 
 
-    def set_attributes(self, location_id, start_time, mapper_list):
+    def set_attributes(self, location_id, submit_time, mapper_list):
         self.locationID = location_id
-        self.startTime = start_time
+        self.submitTime = submit_time
         self.mapperList = mapper_list
         self.mapperNum = len(self.mapperList)
         # compu tasks number  
