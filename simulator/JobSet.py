@@ -19,9 +19,9 @@ class JobSet:
     # read coflow trace and add jobs
     def readTrace(self):
         base_dir = os.getcwd()
-        f_name = os.path.join(base_dir, '', "coflow_trace.txt")
+        f_name = os.path.join(base_dir, '', "coflow_trace_test.txt")
         f = open(f_name, 'r')
-        print("Begin to read coflow_trace...")
+        print("Begin to read coflow_trace_test...")
         for line in f:
             line = line.strip()
             sp_line = line.split(' ')
@@ -43,6 +43,7 @@ class JobSet:
                 data_size = float(ssp_line[1])
                 reducer_list.append(reducer_id)
                 data_size_list.append(data_size)
+                cursor += 1
             self.addJob(submit_time, mapper_list, reducer_list, data_size_list)
         f.close()
     
