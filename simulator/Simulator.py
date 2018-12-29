@@ -1,5 +1,6 @@
 import Constants
 import Job
+from RackInfo import RackInfo
 class Simulator:
     def __init__(self, jobset):
         self.jobset = jobset
@@ -9,12 +10,15 @@ class Simulator:
         self.active_Compus = []
         self.sendBpsFree = []
         self.recvBpsFree = []
-        self.rockCpsFree = []
+        self.rackCpsFree = []
+        self.rackinfos = []
+        self.FinishedJobs = []
         self.CURRENT_TIME = 0
         for i in range(Constants.MACHINENUM):
             self.sendBpsFree.append(Constants.RACK_BITS_PER_SEC)
             self.recvBpsFree.append(Constants.RACK_BITS_PER_SEC)
-            self.rockCpsFree.append(Constants.RACK_COMP_PER_SEC)
+            self.rackCpsFree.append(Constants.RACK_COMP_PER_SEC)
+            self.rackinfos.append(RackInfo())
 
     def ActiveJobAdd(self, job):
         #我们这里直接按照Job的时间顺序进行插入，后面可能设计到其他的插入排序方法
@@ -30,8 +34,28 @@ class Simulator:
         for i in range(Constants.MACHINENUM):
             self.sendBpsFree[i] = Constants.RACK_BITS_PER_SEC
             self.recvBpsFree[i] = Constants.RACK_BITS_PER_SEC
-            self.rockCpsFree[i] = Constants.RACK_COMP_PER_SEC
-
+            self.rackCpsFree[i] = Constants.RACK_COMP_PER_SEC
+            self.rackinfos[i].resetinfo()
+            
+    def debug_info(self, level = 0):
+        print("Active Jobs:",end=' ')
+        for activeJob in self.active_jobs:
+            print(activeJob.jobName,end=',')
+        print("\nFinished Jobs",end=' ')
+        for finJob in self.FinishedJobs:
+            print(finJob,end=',')   
+        if level >= 1: 
+            print("\n######Detail Info######")
+            count = 0
+            for rackinfo in self.rackinfos:
+                if rackinfo.UsedSendBpsPro or rackinfo.UsedRecvBpsPro or rackinfo.UsedCpsPro:
+                    print("RACKID:",count)
+                    print(rackinfo.UsedSendBpsPro)
+                    print(rackinfo.UsedRecvBpsPro)
+                    print(rackinfo.UsedCpsPro)
+                    print("-------------")
+                count += 1    
+        print("\n#########################")
 
     def simulate(self, EPOCH_IN_MILLIS):
         curJob = 0
@@ -40,7 +64,7 @@ class Simulator:
             self.active_flows = []
             self.active_Compus = []
             jobsAdded = 0
-            print(self.CURRENT_TIME/1000)
+            print("CURRENT:",self.CURRENT_TIME/1000)
             #step1 : 添加新时间窗口的JOB，并将job和他包括的reducetask设置为submitted
             while curJob<TOTAL_JOBS:
                 job = self.jobset.jobsList[curJob]
@@ -81,11 +105,13 @@ class Simulator:
                         flow.startTime = self.CURRENT_TIME
                     idealbps = (8*1048576*flow.remainSize)/(EPOCH_IN_MILLIS/1000)
                     flow.currentBps = min(idealbps, supportBps)
+                    self.rackinfos[SendRack].UsedSendBpsPro[flow.flowName] = flow.currentBps/Constants.RACK_BITS_PER_SEC
+                    self.rackinfos[RecvRack].UsedRecvBpsPro[flow.flowName] = flow.currentBps/Constants.RACK_BITS_PER_SEC
                     self.sendBpsFree[SendRack] = self.sendBpsFree[SendRack] - flow.currentBps
                     self.recvBpsFree[RecvRack] = self.recvBpsFree[RecvRack] - flow.currentBps
             for comp in self.active_Compus:
                 RackId = comp.locationID
-                supportCps = self.rockCpsFree[RackId]
+                supportCps = self.rackCpsFree[RackId]
                 comp.currentCps = 0.0
                 if supportCps > Constants.ZERO:
                     if comp.parentReducer.startTime>=Constants.MAXTIME:
@@ -94,7 +120,8 @@ class Simulator:
                         comp.startTime = self.CURRENT_TIME
                     idealcps = comp.remainSize/(EPOCH_IN_MILLIS/1000)
                     comp.currentCps = min(idealcps, supportCps)
-                    self.rockCpsFree[RackId] = self.rockCpsFree[RackId] - comp.currentCps
+                    self.rackinfos[RackId].UsedCpsPro[comp.compuName] = comp.currentCps/Constants.RACK_COMP_PER_SEC
+                    self.rackCpsFree[RackId] = self.rackCpsFree[RackId] - comp.currentCps
             #step4 ：开始仿真结算
             for flow in self.active_flows:
                 flow.remainSize = flow.remainSize - (EPOCH_IN_MILLIS/1000)*flow.currentBps/(1048576*8)
@@ -104,16 +131,6 @@ class Simulator:
                     flow.parentReducer.finFlowNum += 1
                     if flow.parentReducer.finFlowNum>=len(flow.parentReducer.flowList):
                         flow.parentJob.flowFinishTime = self.CURRENT_TIME
-                    if flow.parentReducer.finFlowNum>=len(flow.parentReducer.flowList)\
-                        and flow.parentReducer.finCompuNum>=len(flow.parentReducer.compuList):
-                        flow.parentReducer.finishTime = self.CURRENT_TIME
-                        flow.parentReducer.reducerActive = Constants.FINISHED
-                        flow.parentJob.finReducerNum += 1
-                        if flow.parentJob.finReducerNum>=len(flow.parentJob.reducerList):
-                            flow.parentJob.finishTime = self.CURRENT_TIME
-                            flow.parentJob.jobActive = Constants.FINISHED
-                            self.active_jobs.remove(flow.parentJob)
-                            self.numActiveJobs = self.numActiveJobs - 1
             for comp in self.active_Compus:
                 comp.remainSize = comp.remainSize - (EPOCH_IN_MILLIS/1000)*comp.currentCps
                 if comp.remainSize<Constants.ZERO and comp.finishTime>=Constants.MAXTIME:
@@ -127,8 +144,9 @@ class Simulator:
                         comp.parentJob.finReducerNum += 1 
                         if comp.parentJob.finReducerNum>=len(comp.parentJob.reducerList):
                             comp.parentJob.finishTime = self.CURRENT_TIME
-                            comp.parentJob.jobActive = Constants.FINISHED    
+                            comp.parentJob.jobActive = Constants.FINISHED 
+                            self.FinishedJobs.append(comp.parentJob.jobName)   
                             self.active_jobs.remove(comp.parentJob)   
                             self.numActiveJobs = self.numActiveJobs - 1                                                    
             self.CURRENT_TIME = self.CURRENT_TIME + EPOCH_IN_MILLIS
-        
+            self.debug_info(level = 1)
