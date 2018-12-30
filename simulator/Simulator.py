@@ -1,8 +1,14 @@
 import Constants
 import Job
 from RackInfo import RackInfo
+import time
+import os
 class Simulator:
     def __init__(self, jobset):
+        self.datetime = time.time()
+        self.rackstatic_sendbps = []
+        self.rackstatic_recvbps = []
+        self.rackstatic_cps = []
         self.jobset = jobset
         self.numActiveJobs = 0
         self.active_jobs = []
@@ -19,6 +25,9 @@ class Simulator:
             self.recvBpsFree.append(Constants.RACK_BITS_PER_SEC)
             self.rackCpsFree.append(Constants.RACK_COMP_PER_SEC)
             self.rackinfos.append(RackInfo())
+            self.rackstatic_sendbps.append([])
+            self.rackstatic_recvbps.append([])
+            self.rackstatic_cps.append([])
 
     def ActiveJobAdd(self, job):
         #我们这里直接按照Job的时间顺序进行插入，后面可能设计到其他的插入排序方法
@@ -36,8 +45,9 @@ class Simulator:
             self.recvBpsFree[i] = Constants.RACK_BITS_PER_SEC
             self.rackCpsFree[i] = Constants.RACK_COMP_PER_SEC
             self.rackinfos[i].resetinfo()
-            
+
     def debug_info(self, level = 0):
+        print("CURRENT:",self.CURRENT_TIME/1000)
         print("Active Jobs:",end=' ')
         for activeJob in self.active_jobs:
             print(activeJob.jobName,end=',')
@@ -56,6 +66,45 @@ class Simulator:
                     print("-------------")
                 count += 1    
         print("\n#########################")
+    
+    def savelog(self, wlength):
+        logfile = "logfile"+time.strftime('%Y-%m-%d-%H-%M-%S',time.localtime(self.datetime))+".csv"
+        logpath = os.path.join(Constants.LOGDIR,logfile)
+        wid = int(self.CURRENT_TIME/wlength)
+        for index in range(len(self.rackinfos)):
+            if self.CURRENT_TIME%wlength == 0:
+                self.rackstatic_sendbps[index].append(0)
+                self.rackstatic_recvbps[index].append(0)
+                self.rackstatic_cps[index].append(0)
+            if self.rackinfos[index].UsedSendBpsPro:
+                self.rackstatic_sendbps[index][wid] += 1
+            if self.rackinfos[index].UsedRecvBpsPro:
+                self.rackstatic_recvbps[index][wid] += 1
+            if self.rackinfos[index].UsedCpsPro:
+                self.rackstatic_cps[index][wid] += 1
+        if self.CURRENT_TIME%wlength == 0:
+            f = open(logpath, 'w')
+            f.write("rackid,")
+            for i in range(wid):
+                f.write(str(i)+",")
+            f.write("\n")
+            for i in range(Constants.MACHINENUM):
+                f.write("rack-"+str(i)+"-send,")
+                for j in range(wid):
+                    f.write(str(self.rackstatic_sendbps[i][j])+",")
+                f.write("\n")
+                f.write("rack-"+str(i)+"-recv,")
+                for j in range(wid):
+                    f.write(str(self.rackstatic_recvbps[i][j])+",")
+                f.write("\n")
+                f.write("rack-"+str(i)+"-comp,")
+                for j in range(wid):
+                    f.write(str(self.rackstatic_cps[i][j])+",")
+                f.write("\n")
+            f.close()
+        #f = open(logpath, 'w')
+        #f.write("hello!")
+
 
     def simulate(self, EPOCH_IN_MILLIS):
         curJob = 0
@@ -64,7 +113,6 @@ class Simulator:
             self.active_flows = []
             self.active_Compus = []
             jobsAdded = 0
-            print("CURRENT:",self.CURRENT_TIME/1000)
             #step1 : 添加新时间窗口的JOB，并将job和他包括的reducetask设置为submitted
             while curJob<TOTAL_JOBS:
                 job = self.jobset.jobsList[curJob]
@@ -148,5 +196,7 @@ class Simulator:
                             self.FinishedJobs.append(comp.parentJob.jobName)   
                             self.active_jobs.remove(comp.parentJob)   
                             self.numActiveJobs = self.numActiveJobs - 1                                                    
+            self.debug_info(level = 0)
+            self.savelog(1000)
             self.CURRENT_TIME = self.CURRENT_TIME + EPOCH_IN_MILLIS
-            self.debug_info(level = 1)
+            
