@@ -1,4 +1,5 @@
 class RackInfo:
+    __slots__ = ['UsedSendBpsPro', 'UsedRecvBpsPro', 'UsedCpsPro']
     def __init__(self):
         self.UsedSendBpsPro = {}
         self.UsedRecvBpsPro = {}
