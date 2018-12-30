@@ -19,7 +19,7 @@ class JobSet:
     # read coflow trace and add jobs
     def readTrace(self):
         base_dir = os.getcwd()
-        f_name = os.path.join(base_dir, '', "coflow_trace.txt")
+        f_name = os.path.join(base_dir, '', "coflow_trace_test.txt")
         f = open(f_name, 'r')
         print("Begin to read coflow_trace...")
         for line in f:
