@@ -1,8 +1,11 @@
 import Constants
 
 class Flow:
+    __slots__ = ['flowName', 'flowID', 'parentReducer', 'parentJob', 'alpha', \
+                 'beta', 'startTime', 'srcID', 'dstID', 'flowSize', 'submitTime', \
+                 'finishTime', 'currentBps', 'remainSize']
+    
     TotalFlowNum = 0
-
     def __init__(self, flow_name, parent_reducer):
         self.flowName = flow_name
         self.flowID = Flow.TotalFlowNum

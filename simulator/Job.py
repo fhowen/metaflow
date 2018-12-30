@@ -6,6 +6,9 @@ from Reducer import Reducer
 import random
 
 class Job:
+    __slots__ = ['jobName', 'jobID', 'jobActive', 'submitTime', \
+                 'startTime', 'finishTime', 'flowFinishTime', \
+                 'finReducerNum', 'reducerList', 'mapperList']
     #job index from 1
     TotalJobNum = 1
     def __init__(self):

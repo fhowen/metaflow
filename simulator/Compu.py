@@ -2,6 +2,10 @@ import Constants
 import networkx as nx
 
 class Compu:
+    __slots__ = ['compuName', 'parentReducer', 'parentJob', 'compuID', \
+                 'locationID', 'compuSize', 'startTime', 'finishTime', \
+                 'remainSize', 'currentCps']
+                 
     TotalCompuNum = 0
 
     def __init__(self, compu_name, parent_reducer):

@@ -7,6 +7,10 @@ import matplotlib.pyplot as plt
 import os
 
 class Reducer:
+    __slots__ = ['reducerName', 'reducerID', 'reducerActive', 'finishTime', \
+                 'dag', 'flowList', 'compuList', 'totalBytes', 'parentJob', \
+                 'startTime', 'finFlowNum', 'finCompuNum', 'locationID', \
+                 'submitTime', 'mapperList', 'mapperNum', 'dagType']
     TotalReducerNum = 0
     def __init__(self, reducer_name, total_bytes, parent_job):
         self.reducerName = reducer_name
