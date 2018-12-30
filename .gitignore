@@ -106,5 +106,8 @@ venv.bak/
 #trace files
 /simulator/dags/
 
+#log files
+/simulator/logfile/
+
 #vscode
 /.vscode/
