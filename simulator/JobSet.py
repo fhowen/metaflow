@@ -52,7 +52,7 @@ class JobSet:
     def genDag(self):
         for j in self.jobsList:
             for r in j.reducerList:
-                r.genTasks(2*len(r.mapperList))
+                r.genTasks(len(r.mapperList))
                 r.bindDag(Constants.DNNDAG)
                 r.initAlphaBeta()
 

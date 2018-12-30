@@ -62,7 +62,7 @@ class Reducer:
 
     def bindDag(self, dag_type):
         if dag_type == "DNN":
-            assert len(self.compuList) == 2*len(self.flowList), "For DNN reducer, a wrong number of compu tasks"
+            assert len(self.compuList) == len(self.flowList), "For DNN reducer, a wrong number of compu tasks"
             self.dagType = Constants.DNNDAG
             self.__bindDnnDag()
         else:
@@ -81,7 +81,7 @@ class Reducer:
     def __initFlowsAlpha(self):
         if self.dagType == Constants.DNNDAG:
             for i in range(0, self.mapperNum):
-                self.flowList[i].alpha = 2*self.mapperNum - i
+                self.flowList[i].alpha = self.mapperNum - i
         else:
             pass
         '''
