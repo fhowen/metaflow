@@ -5,7 +5,8 @@ a more detailed abstraction of flows compared to CoFlow
 
 Dependency
 1. networkx 2.2 
-
+2. pandas (for trace analysis)
+3. matplotlib
 
 Notes
 
