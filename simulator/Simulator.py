@@ -5,7 +5,8 @@ import time
 import os
 import random
 class Simulator:
-    def __init__(self, jobset):
+    def __init__(self, jobset, algorithm="MDAG"):
+        self.algorithm = algorithm
         self.datetime = time.time()
         self.rackstatic_sendbps = []
         self.rackstatic_recvbps = []
@@ -67,7 +68,19 @@ class Simulator:
                     print("-------------")
                 count += 1    
         print("\n#########################")
-    
+    def logjobtime(self):
+        logfile = "logjobtime-" + self.algorithm + time.strftime('%Y-%m-%d-%H-%M-%S',time.localtime(self.datetime)) + ".csv"
+        logpath = os.path.join(Constants.LOGDIR,logfile)
+        f = open(logpath, 'w')
+        f.write("Job-ID,submitTime,startTime,flowFinTime,FinTime,\n")
+        for job in self.jobset.jobsList:
+            f.write(str(job.jobID) + "," + \
+                    str(job.submitTime) +"," + \
+                    str(job.startTime) +"," + \
+                    str(job.flowFinishTime) +"," + \
+                    str(job.finishTime) + ",\n")
+        f.close()
+
     def savelog(self, wlength):
         logfile = "logfile"+time.strftime('%Y-%m-%d-%H-%M-%S',time.localtime(self.datetime))+".csv"
         logpath = os.path.join(Constants.LOGDIR,logfile)
@@ -130,6 +143,12 @@ class Simulator:
                     rrack = self.active_flows[maxflow].dstID
                     remainBps = min(self.sendBpsFree[srack], self.recvBpsFree[rrack])
                     if remainBps>Constants.ZERO:
+                        if self.active_flows[maxflow].parentJob.startTime>=Constants.MAXTIME:
+                            self.active_flows[maxflow].parentJob.startTime = self.CURRENT_TIME
+                        if self.active_flows[maxflow].parentReducer.startTime>=Constants.MAXTIME:
+                            self.active_flows[maxflow].parentReducer.startTime = self.CURRENT_TIME
+                        if self.active_flows[maxflow].startTime>=Constants.MAXTIME:
+                            self.active_flows[maxflow].startTime = self.CURRENT_TIME
                         self.active_flows[maxflow].currentBps = \
                             min(remainBps,(8*1048576*self.active_flows[maxflow].remainSize)/maxalpha)
                         self.sendBpsFree[srack] -= self.active_flows[maxflow].currentBps
@@ -144,6 +163,12 @@ class Simulator:
                         rrack = self.active_flows[s].dstID
                         remainBps = min(self.sendBpsFree[srack], self.recvBpsFree[rrack])
                         if remainBps>Constants.ZERO:
+                            if self.active_flows[s].parentJob.startTime>=Constants.MAXTIME:
+                                self.active_flows[s].parentJob.startTime = self.CURRENT_TIME
+                            if self.active_flows[s].parentReducer.startTime>=Constants.MAXTIME:
+                                self.active_flows[s].parentReducer.startTime = self.CURRENT_TIME
+                            if self.active_flows[s].startTime>=Constants.MAXTIME:
+                                self.active_flows[s].startTime = self.CURRENT_TIME
                             idealbps = (8*1048576*self.active_flows[s].remainSize)/maxalpha
                             self.active_flows[s].currentBps = min(idealbps, remainBps)
                             self.sendBpsFree[srack] -= self.active_flows[s].currentBps
@@ -203,7 +228,7 @@ class Simulator:
                 self.sendBpsFree[SendRack] = self.sendBpsFree[SendRack] - flow.currentBps
                 self.recvBpsFree[RecvRack] = self.recvBpsFree[RecvRack] - flow.currentBps
 
-    def simulate(self, EPOCH_IN_MILLIS):
+    def simulate(self, EPOCH_IN_MILLIS, saveDetail = True, debugLevel=0):
         curJob = 0
         TOTAL_JOBS = len(self.jobset.jobsList)
         while self.CURRENT_TIME<Constants.MAXTIME and (curJob<TOTAL_JOBS or self.numActiveJobs>0):
@@ -213,7 +238,7 @@ class Simulator:
             #step1 : 添加新时间窗口的JOB，并将job和他包括的reducetask设置为submitted
             while curJob<TOTAL_JOBS:
                 job = self.jobset.jobsList[curJob]
-                if job.submitTime > self.CURRENT_TIME + EPOCH_IN_MILLIS:
+                if job.submitTime >= self.CURRENT_TIME + EPOCH_IN_MILLIS:
                     break
                 jobsAdded = jobsAdded + 1
                 job.jobActive = Constants.SUBMITTED
@@ -236,9 +261,12 @@ class Simulator:
                                 self.active_Compus.append(compu)      
             #step3 ：将active_flows排序，给各个active的flow安排bps，以及active的compu安排cps
             self.resetBpsCpsFree()
-            #self.FIFO_Distribution(EPOCH_IN_MILLIS)
-            #self.MDAG_Distribution(EPOCH_IN_MILLIS)
-            self.SEBF_Distribution()
+            if self.algorithm == "FIFO":
+                self.FIFO_Distribution(EPOCH_IN_MILLIS)
+            elif self.algorithm == "SEBF":
+                self.SEBF_Distribution()
+            else:
+                self.MDAG_Distribution(EPOCH_IN_MILLIS)    
             for comp in self.active_Compus:
                 RackId = comp.locationID
                 supportCps = self.rackCpsFree[RackId]
@@ -278,7 +306,8 @@ class Simulator:
                             self.FinishedJobs.append(comp.parentJob.jobName)   
                             self.active_jobs.remove(comp.parentJob)   
                             self.numActiveJobs = self.numActiveJobs - 1                                                    
-            self.debug_info(level = 0)
-            #self.savelog(1000)
+            self.debug_info(level = debugLevel)
+            if saveDetail:
+                self.savelog(1000)
             self.CURRENT_TIME = self.CURRENT_TIME + EPOCH_IN_MILLIS
-            
+        self.logjobtime()
