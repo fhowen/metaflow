@@ -197,6 +197,6 @@ class Simulator:
                             self.active_jobs.remove(comp.parentJob)   
                             self.numActiveJobs = self.numActiveJobs - 1                                                    
             self.debug_info(level = 0)
-            self.savelog(1000)
+            #self.savelog(1000)
             self.CURRENT_TIME = self.CURRENT_TIME + EPOCH_IN_MILLIS
             

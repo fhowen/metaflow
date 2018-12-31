@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # cal for overlap ratio
-def ana_1(file_name):
+def rack_overlap(file_name):
     IO = file_name
     data = pd.read_csv(IO)    
     # 450, 150
@@ -37,24 +37,85 @@ def ana_1(file_name):
     plt.scatter(range(0, 150), overLapList, s=50, alpha=.5)
     plt.text(0, 1.05, 'Average: ' + str(ave_overlap), fontsize=10)
     plt.show()
+
+
+def job_fintime(file_1, file_2, file_3):
+    data_1 = pd.read_csv(file_1)
+    data_2 = pd.read_csv(file_2)
+    data_3 = pd.read_csv(file_3)
+    #print("Total rows: {0}".format(len(data)))
+    flowfin = [[],[],[]]
+    jobfin = [[],[],[]]
+    # for each job
+    for i in range(0, len(data_1)):
+        row_1 = data_1.loc[i]
+        row_2 = data_2.loc[i]
+        row_3 = data_3.loc[i]
+        flowfin[0].append(row_1[3] - row_1[1])
+        flowfin[1].append(row_2[3] - row_2[1])
+        flowfin[2].append(row_3[3] - row_3[1])
+        jobfin[0].append(row_1[4] - row_1[1])
+        jobfin[1].append(row_2[4] - row_2[1])
+        jobfin[2].append(row_3[4] - row_3[1])
+    # sum time of flow and job finish
+    flowsum = []
+    jobsum = []
+    for i in range(0,3):
+        flowsum.append(sum(flowfin[i]))
+        jobsum.append(sum(jobfin[i]))
+    for i in range(0,3):
+        flowsum[i] = flowsum[i]/len(flowfin[0])
+        jobsum[i] = jobsum[i]/len(flowfin[0])
+
+    plt.yscale('log')
+    x =list(range(1,len(flowfin[0]) + 1))
+    total_width, n = 0.8, 3
+    width = total_width / n
+    plt.bar(x,flowfin[0],label='MDAG',width=width,fc='g')
+    for i in range(len(x)):
+        x[i] = x[i] + width
+    plt.bar(x,flowfin[1],label='SEBF',width=width,fc='r')
+    for i in range(len(x)):
+        x[i] = x[i] + width
+    plt.bar(x,flowfin[2],label='FIFO',width=width,fc='b')
+    plt.legend()
+    plt.text(1, 100000, 'flowfin: ' + str(flowsum[0]) + " " + str(flowsum[1]) + " " + str(flowsum[2]), fontsize=10)
+    #plt.show()
+    plt.savefig('flowfin.png')
     
+    plt.cla()
 
-            
-
-
-
+    plt.yscale('log')
+    x =list(range(1,len(flowfin[0]) + 1))
+    total_width, n = 0.8, 3
+    width = total_width / n
+    plt.bar(x,jobfin[0],label='MDAG',width=width,fc='g')
+    for i in range(len(x)):
+        x[i] = x[i] + width
+    plt.bar(x,jobfin[1],label='SEBF',width=width,fc='r')
+    for i in range(len(x)):
+        x[i] = x[i] + width
+    plt.bar(x,jobfin[2],label='FIFO',width=width,fc='b')
+    plt.legend()
+    plt.text(1, 100000, 'jobfin: ' + str(jobsum[0]) + " " + str(jobsum[1]) + " " + str(jobsum[2]), fontsize=10)
+    #plt.show()
+    plt.savefig('jobfin.png')
+    plt.cla()
 
 
 if __name__ == "__main__":
+    
+    #overlap computation
+    '''
     log_name = "logfile-10.csv"
+    rack_overlap(log_name)
     '''
-    data = pd.read_csv("logfile2018-12-30-18-51-30.csv")    
-    print("Total rows: {0}".format(len(data)))
-    print(data.loc[0])
-    for i in range(0,3):
-        print(i)
-    '''
-    ana_1(log_name)
+
+    # job finish time comparision
+    file_1 = "logjobtime-MDAG.csv"
+    file_2 = "logjobtime-SEBF.csv"
+    file_3 = "logjobtime-FIFO.csv"
+    job_fintime(file_1, file_2, file_3)
 
 
 
