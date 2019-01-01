@@ -40,7 +40,7 @@ class JobSet:
             for j in range(0, reducer_num):
                 ssp_line = sp_line[cursor].split(':')
                 reducer_id = int(ssp_line[0])
-                data_size = float(ssp_line[1])
+                data_size = float(ssp_line[1])*8*1024*1024
                 reducer_list.append(reducer_id)
                 data_size_list.append(data_size)
                 cursor += 1
