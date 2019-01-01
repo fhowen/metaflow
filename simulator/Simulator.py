@@ -228,7 +228,7 @@ class Simulator:
                 self.sendBpsFree[SendRack] = self.sendBpsFree[SendRack] - flow.currentBps
                 self.recvBpsFree[RecvRack] = self.recvBpsFree[RecvRack] - flow.currentBps
 
-    def simulate(self, EPOCH_IN_MILLIS, saveDetail = False, debugLevel=1):
+    def simulate(self, EPOCH_IN_MILLIS, saveDetail = False, debugLevel=0):
         curJob = 0
         TOTAL_JOBS = len(self.jobset.jobsList)
         while self.CURRENT_TIME<Constants.MAXTIME and (curJob<TOTAL_JOBS or self.numActiveJobs>0):
@@ -250,7 +250,7 @@ class Simulator:
                 for rtask in ajob.reducerList:
                     if rtask.reducerActive == Constants.SUBMITTED \
                         or rtask.reducerActive == Constants.STARTED:
-                        #random.shuffle(rtask.flowList)
+                        random.shuffle(rtask.flowList)
                         for flow in rtask.flowList:
                             if flow.remainSize>Constants.ZERO:
                                 flow.beta = flow.remainSize
