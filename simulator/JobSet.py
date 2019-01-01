@@ -51,34 +51,53 @@ class JobSet:
     def createOneDag(self, dag_type, mapper_num):
         dag = nx.DiGraph()
         if dag_type == Constants.DNNDAG:
-            # create nodes
+            # create nodes, flow nodes followed by compu nodes
             for i in range(0, mapper_num):
-                dag.add_node(str(i))
+                dag.add_node(i)
             for i in range(mapper_num, 2*mapper_num):
-                dag.add_node(str(i))
+                dag.add_node(i)
             # add edges
             # 1. edges from flow to compu
             for i in range(0, mapper_num):
-                dag.add_edge(str(i), str(i+mapper_num))
+                dag.add_edge(i, i+mapper_num)
             # 2. edges from compu to compu
             for i in range(mapper_num, 2*mapper_num - 1):
-                dag.add_edge(str(i), str(i+1))
-            print(dag.edges())
+                dag.add_edge(i, i+1)
+            #print(dag.edges())
+        return dag
             
 
     #copy the relationship in pure dag to real dag of reducer
-    def copyDag(self, pure_dag):
-        pass
+    def copyDag(self, pure_dag, reducer, dag_type):
+        # generate flow tasks and compu tasks
+        compu_num = pure_dag.number_of_nodes() - len(reducer.mapperList)
+        reducer.dagType = dag_type
+        reducer.genTasks(compu_num)
+        # copy edges 
+        for u,v in pure_dag.edges():
+            #print(u,v)
+            v = v - reducer.mapperNum
+            # 1 flow --> compu
+            if u < reducer.mapperNum:
+                reducer.dag.add_edge(reducer.flowList[u], \
+                                     reducer.compuList[v])
+            # 2 compu --> compu 
+            else:
+                u = u - reducer.mapperNum
+                reducer.dag.add_edge(reducer.flowList[u], \
+                                     reducer.compuList[v])
 
     # generate dag relationship and task size
     def genDags(self):
         for j in self.jobsList:
             # generate a dag
-            self.createOneDag(Constants.DNNDAG, 4)
+            dag_type = Constants.DNNDAG
+            pure_dag = self.createOneDag(dag_type, len(j.mapperList))
             for r in j.reducerList:
                 # assign the dag to each reducer
+                self.copyDag(pure_dag, r, dag_type)
                 r.genTasks(len(r.mapperList))
-                r.bindDag(Constants.DNNDAG)
+                #r.bindDag(Constants.DNNDAG)
                 r.initAlphaBeta()
 
     # store dag to .dot and .txt file
