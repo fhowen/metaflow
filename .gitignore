@@ -108,6 +108,7 @@ venv.bak/
 
 #log files
 /simulator/logfile/*.csv
+/simulator/logfile/*.png
 
 #vscode
 /.vscode/
