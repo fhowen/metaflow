@@ -58,8 +58,7 @@ class JobSet:
                 # set beta
                 job.dag.node[i]['beta'] = mapper_num - i
         elif dag_type == Constants.WEBDAG:
-            for i in range(0, mapper_num):
-                job.dag.node[i]['alpha'] = mapper_num - i
+            pass
         else:
             pass
 
@@ -67,7 +66,9 @@ class JobSet:
     #create the uniform dag for one job
     def createOneDag(self, dag_type, mapper_num):
         dag = nx.DiGraph()
+        compu_num = 0
         if dag_type == Constants.DNNDAG:
+            compu_num = mapper_num
             # create nodes, flow nodes followed by compu nodes
             for i in range(0, mapper_num):
                 dag.add_node(i)
@@ -82,15 +83,21 @@ class JobSet:
                 dag.add_edge(i, i+1)
             #print(dag.edges())
         elif dag_type == Constants.WEBDAG:
+            compu_num = 1
             # mapper_num flow and 1 compu
             for i in range(0, mapper_num + 1):
                 dag.add_node(i)
             # add edges
             for i in range(0, mapper_num):
                 dag.add_edge(i, mapper_num)
+        # random dag
         else:
-            pass
-        return dag
+            # mapper num flow 
+            for i in range(0, mapper_num):
+                dag.add_node(i)
+            compu_num = random.randint(mapper_num,3*mapper_num)
+
+        return dag, compu_num
             
 
     #copy the relationship in pure dag to real dag of reducer
@@ -120,11 +127,11 @@ class JobSet:
             # generate a dag
             # dag_type = Constants.DNNDAG
             dag_type = Constants.WEBDAG
-            j.dag = self.createOneDag(dag_type, len(j.mapperList))
+            j.dag, compu_num = self.createOneDag(dag_type, len(j.mapperList))
             self.dagAttrs(j, dag_type)
             for r in j.reducerList:
                 # assign the dag to each reducer
-                r.genTasks(len(r.mapperList))
+                r.genTasks(compu_num)
                 self.copyDag(j.dag, r, dag_type)
                 #r.bindDag(Constants.DNNDAG)
                 #r.initAlphaBeta()

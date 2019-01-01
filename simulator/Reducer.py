@@ -48,7 +48,7 @@ class Reducer:
         elif dag_type == Constants.WEBDAG:
             # set alpha
             for i in range(0, self.mapperNum):
-                self.flowList[i].alpha = self.parentJob.dag.node[i]['alpha']
+                self.flowList[i].alpha = self.mapperNum - int(self.reducerName.split('-')[2]) 
             # set beta
             for i in self.flowList:
                 i.beta = i.remainSize
