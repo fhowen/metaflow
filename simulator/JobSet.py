@@ -69,7 +69,7 @@ class JobSet:
             # 2. edges from compu to compu
             for i in range(mapper_num, 2*mapper_num - 1):
                 dag.add_edge(i, i+1)
-            #print(dag.edges())
+            print(dag.edges())
         if dag_type == Constants.WEBDAG:
             pass
         return dag
@@ -92,7 +92,7 @@ class JobSet:
             # 2 compu --> compu 
             else:
                 u = u - reducer.mapperNum
-                reducer.dag.add_edge(reducer.flowList[u], \
+                reducer.dag.add_edge(reducer.compuList[u], \
                                      reducer.compuList[v])
 
 
