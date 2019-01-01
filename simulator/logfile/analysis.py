@@ -36,7 +36,8 @@ def rack_overlap(file_name):
     # plot
     plt.scatter(range(0, 150), overLapList, s=50, alpha=.5)
     plt.text(0, 1.05, 'Average: ' + str(ave_overlap), fontsize=10)
-    plt.show()
+    plt.savefig('overMDAG.png')
+    #plt.show()
 
 
 def job_fintime(file_1, file_2, file_3):
@@ -72,12 +73,18 @@ def job_fintime(file_1, file_2, file_3):
     total_width, n = 0.8, 3
     width = total_width / n
     plt.bar(x,flowfin[0],label='MDAG',width=width,fc='g')
+    for a,b in zip(x,flowfin[0]):  
+        plt.text(a, b+0.05, '%.0f' % b, ha='center', va= 'bottom',fontsize=11) 
     for i in range(len(x)):
         x[i] = x[i] + width
     plt.bar(x,flowfin[1],label='SEBF',width=width,fc='r')
+    for a,b in zip(x,flowfin[1]):  
+        plt.text(a, b+0.05, '%.0f' % b, ha='center', va= 'bottom',fontsize=11)
     for i in range(len(x)):
         x[i] = x[i] + width
     plt.bar(x,flowfin[2],label='FIFO',width=width,fc='b')
+    for a,b in zip(x,flowfin[2]):  
+        plt.text(a, b+0.05, '%.0f' % b, ha='center', va= 'bottom',fontsize=11)
     plt.legend()
     plt.text(1, 100000, 'flowfin: ' + str(flowsum[0]) + " " + str(flowsum[1]) + " " + str(flowsum[2]), fontsize=10)
     #plt.show()
@@ -90,12 +97,18 @@ def job_fintime(file_1, file_2, file_3):
     total_width, n = 0.8, 3
     width = total_width / n
     plt.bar(x,jobfin[0],label='MDAG',width=width,fc='g')
+    for a,b in zip(x,jobfin[0]):  
+        plt.text(a, b+0.05, '%.0f' % b, ha='center', va= 'bottom',fontsize=11)
     for i in range(len(x)):
         x[i] = x[i] + width
     plt.bar(x,jobfin[1],label='SEBF',width=width,fc='r')
+    for a,b in zip(x,jobfin[1]):  
+        plt.text(a, b+0.05, '%.0f' % b, ha='center', va= 'bottom',fontsize=11)
     for i in range(len(x)):
         x[i] = x[i] + width
     plt.bar(x,jobfin[2],label='FIFO',width=width,fc='b')
+    for a,b in zip(x,jobfin[2]):  
+        plt.text(a, b+0.05, '%.0f' % b, ha='center', va= 'bottom',fontsize=11)
     plt.legend()
     plt.text(1, 100000, 'jobfin: ' + str(jobsum[0]) + " " + str(jobsum[1]) + " " + str(jobsum[2]), fontsize=10)
     #plt.show()
@@ -107,15 +120,16 @@ if __name__ == "__main__":
     
     #overlap computation
     '''
-    log_name = "logfile-10.csv"
+    log_name = "logfile2018-12-31-12-23-45.csv"
     rack_overlap(log_name)
     '''
 
     # job finish time comparision
-    file_1 = "logjobtime-MDAG.csv"
-    file_2 = "logjobtime-SEBF.csv"
-    file_3 = "logjobtime-FIFO.csv"
+    file_1 = "logjobtime-MDAG2018-12-31-13-03-45.csv"
+    file_2 = "logjobtime-SEBF2018-12-31-13-04-01.csv"
+    file_3 = "logjobtime-FIFO2018-12-31-12-12-50.csv"
     job_fintime(file_1, file_2, file_3)
+    
 
 
 
