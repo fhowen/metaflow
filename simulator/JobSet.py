@@ -3,7 +3,7 @@ from Flow import Flow
 from Compu import Compu
 from Reducer import Reducer
 from Job import Job
-#import networkx as nx
+import networkx as nx
 import random
 import os
 
@@ -48,10 +48,15 @@ class JobSet:
         f.close()
     
 
+    def createOneDag(self, dag_type):
+        pass
+
     # generate dag relationship and task size
-    def genDag(self):
+    def genDags(self):
         for j in self.jobsList:
+            # generate a dag
             for r in j.reducerList:
+                # assign the dag to each reducer
                 r.genTasks(len(r.mapperList))
                 r.bindDag(Constants.DNNDAG)
                 r.initAlphaBeta()
