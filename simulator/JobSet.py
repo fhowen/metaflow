@@ -47,6 +47,12 @@ class JobSet:
             self.addJob(submit_time, mapper_list, reducer_list, data_size_list)
         f.close()
     
+    def dagAttrs(self, dag_type, mapper_num):
+        pass
+
+
+
+
     #create the uniform dag for one job
     def createOneDag(self, dag_type, mapper_num):
         dag = nx.DiGraph()
@@ -64,6 +70,8 @@ class JobSet:
             for i in range(mapper_num, 2*mapper_num - 1):
                 dag.add_edge(i, i+1)
             #print(dag.edges())
+        if dag_type == Constants.WEBDAG:
+            pass
         return dag
             
 
@@ -87,6 +95,8 @@ class JobSet:
                 reducer.dag.add_edge(reducer.flowList[u], \
                                      reducer.compuList[v])
 
+
+    # === TO DO ====== where to assign the compute size ?
     # generate dag relationship and task size
     def genDags(self):
         for j in self.jobsList:
@@ -95,8 +105,8 @@ class JobSet:
             pure_dag = self.createOneDag(dag_type, len(j.mapperList))
             for r in j.reducerList:
                 # assign the dag to each reducer
-                self.copyDag(pure_dag, r, dag_type)
                 r.genTasks(len(r.mapperList))
+                self.copyDag(pure_dag, r, dag_type)
                 #r.bindDag(Constants.DNNDAG)
                 r.initAlphaBeta()
 
