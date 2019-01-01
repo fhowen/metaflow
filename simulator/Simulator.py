@@ -21,6 +21,9 @@ class Simulator:
         self.rackCpsFree = []
         self.rackinfos = []
         self.FinishedJobs = []
+        self.static_recv = 0
+        self.static_comp = 0
+        self.static_recvcomp = 0
         self.CURRENT_TIME = 0
         for i in range(Constants.MACHINENUM):
             self.sendBpsFree.append(Constants.RACK_BITS_PER_SEC)
@@ -58,18 +61,25 @@ class Simulator:
             print(finJob,end=',')   
         if level >= 1: 
             print("\n######Detail Info######")
-            count = 0
-            for rackinfo in self.rackinfos:
-                if rackinfo.UsedSendBpsPro or rackinfo.UsedRecvBpsPro or rackinfo.UsedCpsPro:
+        count = 0
+        for rackinfo in self.rackinfos:
+            if rackinfo.UsedSendBpsPro or rackinfo.UsedRecvBpsPro or rackinfo.UsedCpsPro:
+                if level >= 1:
                     print("RACKID:",count)
                     print(rackinfo.UsedSendBpsPro)
                     print(rackinfo.UsedRecvBpsPro)
                     print(rackinfo.UsedCpsPro)
                     print("-------------")
-                count += 1    
+                if rackinfo.UsedRecvBpsPro:
+                    self.static_recv += 1
+                if rackinfo.UsedCpsPro:
+                    self.static_comp += 1
+                if rackinfo.UsedCpsPro and rackinfo.UsedRecvBpsPro:
+                    self.static_recvcomp += 1
+            count += 1    
         print("\n#########################")
     def logjobtime(self):
-        logfile = "logjobtime-" + self.algorithm + time.strftime('%Y-%m-%d-%H-%M-%S',time.localtime(self.datetime)) + ".csv"
+        logfile = "logjobtime-" + self.algorithm + ".csv"
         logpath = os.path.join(Constants.LOGDIR,logfile)
         f = open(logpath, 'w')
         f.write("Job-ID,submitTime,startTime,flowFinTime,FinTime,\n")
@@ -313,3 +323,9 @@ class Simulator:
                 self.savelog(1)
             self.CURRENT_TIME = self.CURRENT_TIME + EPOCH_IN_MILLIS
         self.logjobtime()
+        print("Recv:", self.static_recv)
+        print("Comp:", self.static_comp)
+        print("Recv and Comp", self.static_recvcomp)
+        totalnum = self.static_recv+self.static_comp - self.static_recvcomp
+        if totalnum>0:
+            print("Overlap(recv and comp) Rate:", self.static_recvcomp/totalnum)
