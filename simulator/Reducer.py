@@ -49,6 +49,9 @@ class Reducer:
             # set alpha
             for i in range(0, self.mapperNum):
                 self.flowList[i].alpha = self.parentJob.dag.node[i]['alpha']
+            # set beta
+            for i in self.flowList:
+                i.beta = i.remainSize
         else:
             pass
 
