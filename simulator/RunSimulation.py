@@ -14,12 +14,11 @@ if __name__ == '__main__':
     if len(sys.argv)>1:
         if sys.argv[1] == "MDAG" or sys.argv[1] == "SEBF" or sys.argv[1] == "FIFO":
             simu = Simulator(js,sys.argv[1])
-            simu.simulate(1)
         else:
             print("Use Default Algorithm : MDAG")
             simu = Simulator(js,"MDAG")
-            simu.simulate(1)
+            
     else:
         print("Use Default Algorithm : MDAG")
         simu = Simulator(js,"MDAG")
-        simu.simulate(1)
+    simu.simulate(1000)

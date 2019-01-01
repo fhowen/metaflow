@@ -47,14 +47,34 @@ class JobSet:
             self.addJob(submit_time, mapper_list, reducer_list, data_size_list)
         f.close()
     
+    #create the uniform dag for one job
+    def createOneDag(self, dag_type, mapper_num):
+        dag = nx.DiGraph()
+        if dag_type == Constants.DNNDAG:
+            # create nodes
+            for i in range(0, mapper_num):
+                dag.add_node(str(i))
+            for i in range(mapper_num, 2*mapper_num):
+                dag.add_node(str(i))
+            # add edges
+            # 1. edges from flow to compu
+            for i in range(0, mapper_num):
+                dag.add_edge(str(i), str(i+mapper_num))
+            # 2. edges from compu to compu
+            for i in range(mapper_num, 2*mapper_num - 1):
+                dag.add_edge(str(i), str(i+1))
+            print(dag.edges())
+            
 
-    def createOneDag(self, dag_type):
+    #copy the relationship in pure dag to real dag of reducer
+    def copyDag(self, pure_dag):
         pass
 
     # generate dag relationship and task size
     def genDags(self):
         for j in self.jobsList:
             # generate a dag
+            self.createOneDag(Constants.DNNDAG, 4)
             for r in j.reducerList:
                 # assign the dag to each reducer
                 r.genTasks(len(r.mapperList))
