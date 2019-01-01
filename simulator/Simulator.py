@@ -307,6 +307,7 @@ class Simulator:
                     comp.remainSize = 0.0
                     comp.finishTime = self.CURRENT_TIME
                     comp.parentReducer.finCompuNum += 1
+                    #print(len(comp.parentReducer.flowList))
                     if comp.parentReducer.finFlowNum>=len(comp.parentReducer.flowList)\
                         and comp.parentReducer.finCompuNum>=len(comp.parentReducer.compuList):
                         comp.parentReducer.finishTime = self.CURRENT_TIME
@@ -318,7 +319,7 @@ class Simulator:
                             self.FinishedJobs.append(comp.parentJob.jobName)   
                             self.active_jobs.remove(comp.parentJob)   
                             self.numActiveJobs = self.numActiveJobs - 1                                                    
-            #self.debug_info(level = debugLevel)
+            self.debug_info(level = debugLevel)
             if saveDetail:
                 self.savelog(1)
             self.CURRENT_TIME = self.CURRENT_TIME + EPOCH_IN_MILLIS

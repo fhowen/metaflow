@@ -80,7 +80,7 @@ class JobSet:
         # generate flow tasks and compu tasks
         compu_num = pure_dag.number_of_nodes() - len(reducer.mapperList)
         reducer.dagType = dag_type
-        reducer.genTasks(compu_num)
+        #reducer.genTasks(compu_num)
         # copy edges 
         for u,v in pure_dag.edges():
             #print(u,v)
@@ -106,6 +106,8 @@ class JobSet:
             for r in j.reducerList:
                 # assign the dag to each reducer
                 r.genTasks(len(r.mapperList))
+                print("===")
+                print(len(r.flowList))
                 self.copyDag(pure_dag, r, dag_type)
                 #r.bindDag(Constants.DNNDAG)
                 r.initAlphaBeta()
@@ -114,8 +116,8 @@ class JobSet:
     def storeDag(self):
         for j in self.jobsList:
             for r in j.reducerList:
-                #r.dag2Dot()
-                r.dag2Txt()
+                r.dag2Dot()
+                #r.dag2Txt()
 
     # read dag from txt file
     def readDag(self):
