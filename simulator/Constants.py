@@ -2,10 +2,10 @@ import sys
 
 MAXTIME = sys.maxsize
 MACHINENUM = 150
-JOBNUM = 3
+JOBNUM = 1
 ZERO = 0.001/(1048576*8)
 RACK_BITS_PER_SEC = 1.0 * 1024 * 1048576 # 1Gbps
-RACK_COMP_PER_SEC = 50.0
+RACK_COMP_PER_SEC = 100.0
 
 
 # dag tye strings
