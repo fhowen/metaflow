@@ -45,7 +45,7 @@ class Reducer:
             # set beta
             for i in self.flowList:
                 i.beta = i.remainSize
-        else if dag_type == Constants.WEBDAG:
+        elif dag_type == Constants.WEBDAG:
             pass
         else:
             pass
