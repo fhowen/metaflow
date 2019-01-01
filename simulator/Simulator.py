@@ -53,7 +53,6 @@ class Simulator:
 
     def debug_info(self, level = 0):
         print("CURRENT:",self.CURRENT_TIME/1000)
-        print(1)
         print("Active Jobs:",end=' ')
         for activeJob in self.active_jobs:
             print(activeJob.jobName,end=',')
