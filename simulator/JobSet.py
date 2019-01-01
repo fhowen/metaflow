@@ -57,12 +57,11 @@ class JobSet:
                 job.dag.node[i]['alpha'] = mapper_num - i
                 # set beta
                 job.dag.node[i]['beta'] = mapper_num - i
+        elif dag_type == Constants.WEBDAG:
+            for i in range(0, mapper_num):
+                job.dag.node[i]['alpha'] = mapper_num - i
         else:
             pass
-
-        
-
-
 
 
     #create the uniform dag for one job
@@ -81,8 +80,15 @@ class JobSet:
             # 2. edges from compu to compu
             for i in range(mapper_num, 2*mapper_num - 1):
                 dag.add_edge(i, i+1)
-            print(dag.edges())
-        if dag_type == Constants.WEBDAG:
+            #print(dag.edges())
+        elif dag_type == Constants.WEBDAG:
+            # mapper_num flow and 1 compu
+            for i in range(0, mapper_num + 1):
+                dag.add_node(i)
+            # add edges
+            for i in range(0, mapper_num):
+                dag.add_edge(i, mapper_num)
+        else:
             pass
         return dag
             
@@ -112,7 +118,8 @@ class JobSet:
     def genDags(self):
         for j in self.jobsList:
             # generate a dag
-            dag_type = Constants.DNNDAG
+            # dag_type = Constants.DNNDAG
+            dag_type = Constants.WEBDAG
             j.dag = self.createOneDag(dag_type, len(j.mapperList))
             self.dagAttrs(j, dag_type)
             for r in j.reducerList:
