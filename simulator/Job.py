@@ -2,13 +2,13 @@ import Constants
 from Flow import Flow
 from Compu import Compu
 from Reducer import Reducer
-#import networkx as nx
+import networkx as nx
 import random
 
 class Job:
     __slots__ = ['jobName', 'jobID', 'jobActive', 'submitTime', \
                  'startTime', 'finishTime', 'flowFinishTime', \
-                 'finReducerNum', 'reducerList', 'mapperList']
+                 'finReducerNum', 'reducerList', 'mapperList', 'dag']
     #job index from 1
     TotalJobNum = 1
     def __init__(self):
@@ -21,6 +21,7 @@ class Job:
         self.flowFinishTime = Constants.MAXTIME
         self.finReducerNum = 0
         self.reducerList = []
+        self.dag = nx.DiGraph()
         Job.TotalJobNum += 1
     
     def set_attributes(self, submit_time, mapper_list, reducer_list, data_size_list):

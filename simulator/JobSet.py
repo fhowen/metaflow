@@ -47,8 +47,20 @@ class JobSet:
             self.addJob(submit_time, mapper_list, reducer_list, data_size_list)
         f.close()
     
-    def dagAttrs(self, dag_type, mapper_num):
-        pass
+    #set size, alpha, bebta
+    def dagAttrs(self, job, dag_type):
+        mapper_num = len(job.mapperList)
+        #1 set alpha and beta
+        if dag_type == Constants.DNNDAG:
+            for i in range(0, mapper_num):
+                # set alpha
+                job.dag.node[i]['alpha'] = mapper_num - i
+                # set beta
+                job.dag.node[i]['beta'] = mapper_num - i
+        else:
+            pass
+
+        
 
 
 
@@ -80,7 +92,6 @@ class JobSet:
         # generate flow tasks and compu tasks
         compu_num = pure_dag.number_of_nodes() - len(reducer.mapperList)
         reducer.dagType = dag_type
-        #reducer.genTasks(compu_num)
         # copy edges 
         for u,v in pure_dag.edges():
             #print(u,v)
@@ -94,7 +105,7 @@ class JobSet:
                 u = u - reducer.mapperNum
                 reducer.dag.add_edge(reducer.compuList[u], \
                                      reducer.compuList[v])
-
+        # copy attrs
 
     # === TO DO ====== where to assign the compute size ?
     # generate dag relationship and task size
@@ -102,15 +113,15 @@ class JobSet:
         for j in self.jobsList:
             # generate a dag
             dag_type = Constants.DNNDAG
-            pure_dag = self.createOneDag(dag_type, len(j.mapperList))
+            j.dag = self.createOneDag(dag_type, len(j.mapperList))
+            self.dagAttrs(j, dag_type)
             for r in j.reducerList:
                 # assign the dag to each reducer
                 r.genTasks(len(r.mapperList))
-                print("===")
-                print(len(r.flowList))
-                self.copyDag(pure_dag, r, dag_type)
+                self.copyDag(j.dag, r, dag_type)
                 #r.bindDag(Constants.DNNDAG)
-                r.initAlphaBeta()
+                #r.initAlphaBeta()
+                r.copyDagAttrs(dag_type)
 
     # store dag to .dot and .txt file
     def storeDag(self):

@@ -37,6 +37,18 @@ class Reducer:
         #self.addTasks(2*len(mapper_list))
         #self.bindDag(Constants.DNNDAG)
 
+    def copyDagAttrs(self, dag_type):
+        if dag_type == Constants.DNNDAG:
+            # set alpha
+            for i in range(0, self.mapperNum):
+                self.flowList[i].alpha = self.parentJob.dag.node[i]['alpha']
+            # set beta
+            for i in self.flowList:
+                i.beta = i.remainSize
+        else if dag_type == Constants.WEBDAG:
+            pass
+        else:
+            pass
 
     def genTasks(self, compu_num):
         self.__addFlows()
