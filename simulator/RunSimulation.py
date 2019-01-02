@@ -10,7 +10,9 @@ import sys
 if __name__ == '__main__':
     js = JobSet()
     js.readTrace()
-    js.genDags(0)
+    # if 0, generate new dags
+    # if 1, read from existing *.txt files 
+    js.genDags(1)
     #js.storeDag()
     if len(sys.argv)>1:
         if sys.argv[1] == "MDAG" or sys.argv[1] == "SEBF" or sys.argv[1] == "FIFO":
@@ -22,4 +24,4 @@ if __name__ == '__main__':
     else:
         print("Use Default Algorithm : MDAG")
         simu = Simulator(js,"MDAG")
-    simu.simulate(1000)
+    simu.simulate(10)
