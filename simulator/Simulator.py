@@ -237,7 +237,8 @@ class Simulator:
                 self.rackinfos[RecvRack].UsedRecvBpsPro[flow.flowName] = flow.currentBps/Constants.RACK_BITS_PER_SEC
                 self.sendBpsFree[SendRack] = self.sendBpsFree[SendRack] - flow.currentBps
                 self.recvBpsFree[RecvRack] = self.recvBpsFree[RecvRack] - flow.currentBps
-
+    def AMDAG_Distribution(self, EPOCH_IN_MILLIS):
+        pass
     def simulate(self, EPOCH_IN_MILLIS, saveDetail = False, debugLevel=0):
         curJob = 0
         TOTAL_JOBS = len(self.jobset.jobsList)
