@@ -91,12 +91,61 @@ class JobSet:
             for i in range(0, mapper_num):
                 dag.add_edge(i, mapper_num)
         # random dag
-        else:
+        elif dag_type == Constants.RANDOMDAG:
+            proba = 0.05
+            nodes_matrix = []
+            temp = []
+            node_rank = 0
             # mapper num flow 
             for i in range(0, mapper_num):
+                temp.append(i)
                 dag.add_node(i)
-            compu_num = random.randint(mapper_num,3*mapper_num)
-
+            # add to matrix    
+            node_rank += mapper_num
+            nodes_matrix.append(temp)
+            temp = []
+            # compu nodes
+            layer_num = random.randint(3, 10)
+            # for each layer
+            for i in range(1, layer_num + 1):
+                # root layer
+                if i == 1:
+                    nodes_num = random.randint(1, mapper_num)
+                # not root layer
+                else:
+                    nodes_num = random.randint(1, mapper_num)
+                # add nodes
+                compu_num += nodes_num
+                for j in range(node_rank, node_rank + nodes_num):
+                    temp.append(j)
+                    dag.add_node(j)
+                # forward and reset
+                nodes_matrix.append(temp)
+                node_rank += nodes_num
+                temp = []
+                # add edges
+                #1 add edges for root layer
+                if i == 1:
+                    for j in nodes_matrix[0]:
+                        dag.add_edge(j, j%len(nodes_matrix[1]) + mapper_num)
+                #2 add edges for each layer, not root layer
+                if i > 1:
+                    b_cur = mapper_num
+                    f_cur = nodes_matrix[i][0] - 1
+                    # for each node in this layer, if not root layer
+                    for j in nodes_matrix[i]:
+                        # for each nodes in previous layer, only root layer can connect with flows
+                        for k in range(b_cur, f_cur + 1):
+                            if random.uniform(0, 1) < proba:
+                                dag.add_edge(k, j)
+                        # check in case no edge is added
+                        if (len(dag.pred[j]) == 0):
+                            # random choose a node as father
+                            father_node = random.randint(b_cur, f_cur)
+                            dag.add_edge(father_node, j)
+            
+        else:
+            pass
         return dag, compu_num
             
 
@@ -126,9 +175,11 @@ class JobSet:
         for j in self.jobsList:
             # generate a dag
             # dag_type = Constants.DNNDAG
-            dag_type = Constants.WEBDAG
+            # dag_type = Constants.WEBDAG
+            dag_type = Constants.RANDOMDAG
             j.dag, compu_num = self.createOneDag(dag_type, len(j.mapperList))
             self.dagAttrs(j, dag_type)
+            
             for r in j.reducerList:
                 # assign the dag to each reducer
                 r.genTasks(compu_num)
