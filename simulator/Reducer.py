@@ -52,8 +52,23 @@ class Reducer:
             # set beta
             for i in self.flowList:
                 i.beta = i.remainSize
+        elif dag_type == Constants.RANDOMDAG:
+            # set alpha
+            for i in range(0, self.mapperNum):
+                self.flowList[i].alpha = self.parentJob.dag.node[i]['alpha']
+            # set beta
+            for i in self.flowList:
+                i.beta = i.remainSize
         else:
             pass
+        # copy size
+        for i in range(0, self.mapperNum):
+            self.flowList[i].flowSize = self.parentJob.dag.node[i]['size']
+            self.flowList[i].remainSize = self.flowList[i].flowSize
+            #print(self.flowList[i].flowSize)
+        for i in range(0, len(self.compuList)):
+            self.compuList[i].compuSize = self.parentJob.dag.node[i+self.mapperNum]['size']
+            self.compuList[i].remainSize = self.compuList[i].compuSize
 
     def genTasks(self, compu_num):
         self.__addFlows()
@@ -63,7 +78,7 @@ class Reducer:
     def __addFlows(self):
         for i in range(0, self.mapperNum):
             f = Flow("F" + self.reducerName[1:] + "-" + str(i), self)
-            f.set_attributes(self.mapperList[i], self.locationID, self.totalBytes/self.mapperNum, self.submitTime)
+            f.set_attributes(self.mapperList[i], self.locationID, 0, self.submitTime)
             self.flowList.append(f)
             self.dag.add_node(f, mark=f.flowName)
         #self.dag.add_nodes_from(self.flowList)
@@ -72,7 +87,7 @@ class Reducer:
         for i in range(0, compu_num):
             c = Compu("C" + self.reducerName[1:] + "-" + str(i), self)
             # fixed compu size 
-            c.set_attributes(self.locationID, 10*(i%3 + 2))
+            c.set_attributes(self.locationID, 0)
             self.compuList.append(c)
             self.dag.add_node(c, mark=c.compuName)
         #self.dag.add_nodes_from(self.compuList)

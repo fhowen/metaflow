@@ -22,4 +22,4 @@ if __name__ == '__main__':
     else:
         print("Use Default Algorithm : MDAG")
         simu = Simulator(js,"MDAG")
-    simu.simulate(1000)
+    simu.simulate(100)

@@ -50,15 +50,46 @@ class JobSet:
     #set size, alpha, bebta
     def dagAttrs(self, job, dag_type):
         mapper_num = len(job.mapperList)
+        compu_num = job.dag.number_of_nodes() - mapper_num
         #1 set alpha and beta
         if dag_type == Constants.DNNDAG:
             for i in range(0, mapper_num):
                 # set alpha
                 job.dag.node[i]['alpha'] = mapper_num - i
-                # set beta
-                job.dag.node[i]['beta'] = mapper_num - i
+                # set flow size
+                job.dag.node[i]['size'] = job.reducerList[0].totalBytes/mapper_num
+            for i in range(mapper_num, mapper_num + compu_num):
+                #print(mapper_num, compu_num)
+                # set compu size
+                job.dag.node[i]['size'] = 10*((i-mapper_num)%3 + 2)
         elif dag_type == Constants.WEBDAG:
-            pass
+            for i in range(0, mapper_num):
+                # set flow size
+                job.dag.node[i]['size'] = job.reducerList[0].totalBytes/mapper_num
+            for i in range(mapper_num, mapper_num + compu_num):
+                # set compu size
+                job.dag.node[i]['size'] = 10*((i-mapper_num)%3 + 2)
+        elif dag_type == Constants.RANDOMDAG:
+            job.dag.add_node("End_node")
+            for i in range(mapper_num, mapper_num + compu_num + 1):
+                job.dag.add_edge(i, "End_node")
+            for i in range(0, mapper_num):
+                p_list = nx.all_simple_paths(job.dag, source=i, target="End_node")
+                max_rank = 0
+                for j in p_list:
+                    if len(j)>max_rank:
+                        max_rank = len(j)
+                job.dag.node[i]['alpha'] = max_rank - 1
+            for i in range(mapper_num, mapper_num + compu_num + 1):
+                job.dag.remove_edge(i, "End_node")
+            job.dag.remove_node("End_node")
+            # set size
+            for i in range(0, mapper_num):
+                # set flow size
+                job.dag.node[i]['size'] = job.reducerList[0].totalBytes/mapper_num
+            for i in range(mapper_num, mapper_num + compu_num):
+                # set compu size
+                job.dag.node[i]['size'] = 10*((i-mapper_num)%3 + 2)
         else:
             pass
 
@@ -174,12 +205,12 @@ class JobSet:
     def genDags(self):
         for j in self.jobsList:
             # generate a dag
-            # dag_type = Constants.DNNDAG
+            dag_type = Constants.DNNDAG
             # dag_type = Constants.WEBDAG
-            dag_type = Constants.RANDOMDAG
+            # dag_type = Constants.RANDOMDAG
             j.dag, compu_num = self.createOneDag(dag_type, len(j.mapperList))
+            #print(compu_num)
             self.dagAttrs(j, dag_type)
-            
             for r in j.reducerList:
                 # assign the dag to each reducer
                 r.genTasks(compu_num)
@@ -191,8 +222,7 @@ class JobSet:
     # store dag to .dot and .txt file
     def storeDag(self):
         for j in self.jobsList:
-            for r in j.reducerList:
-                r.dag2Dot()
+                j.dag2Dot()
                 #r.dag2Txt()
 
     # read dag from txt file
@@ -202,25 +232,3 @@ class JobSet:
                 r.txt2Dag()
                 r.initAlphaBeta()
 
-
-'''
-js.addJob(100, [1,2,3],[4,5,6],[100,200,300])
-for i in js.jobsList:
-    #i.reducerList[0].plotDag()cd ..
-    for j in i.reducerList:
-        #j.dag2Dot()
-        print("===========")
-        print(j.flowList[0])
-        j.dag2Txt()
-        for m in j.dag.neighbors(j.flowList[0]):
-            print(m)
-
-print("===========")
-'''
-'''
-node = js.jobsList[0].reducerList[0].getNodeByMark("F-0-0-0")
-print(node)
-'''
-'''
-js.jobsList[0].reducerList[0].txt2Dag()
-'''
