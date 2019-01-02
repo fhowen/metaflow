@@ -9,7 +9,8 @@ import os
 class Job:
     __slots__ = ['jobName', 'jobID', 'jobActive', 'submitTime', \
                  'startTime', 'finishTime', 'flowFinishTime', \
-                 'finReducerNum', 'reducerList', 'mapperList', 'dag']
+                 'finReducerNum', 'reducerList', 'mapperList', \
+                 'dag', 'dagType']
     #job index from 1
     TotalJobNum = 1
     def __init__(self):
@@ -23,6 +24,7 @@ class Job:
         self.finReducerNum = 0
         self.reducerList = []
         self.dag = nx.DiGraph()
+        self.dagType = ''
         Job.TotalJobNum += 1
     
     def set_attributes(self, submit_time, mapper_list, reducer_list, data_size_list):
@@ -46,31 +48,58 @@ class Job:
     
     def dag2Txt(self):
         base_dir = os.getcwd()
+        mapper_num = len(self.mapperList)
+        compu_num = self.dag.number_of_nodes() - mapper_num
         file_name = os.path.join(base_dir, 'dags', self.jobName + ".txt")
         f_open = open(file_name, 'w')
-        f_open.write(str(self.dag.number_of_nodes() - len(self.mapperList)) + '\n')
-        for i in range(0, len(self.mapperList)):
+        f_open.write(str(self.dagType) + " " + str(mapper_num) + ' ' + str(compu_num) + '\n')
+        for i in range(0, mapper_num):
             temp_str = str(i)
             temp_str += " "
-            temp_str += str(i.flowSize)
-            for j in self.compuList:
-                if self.dag.has_edge(i,j):
+            temp_str += str(self.dag.node[i]['size'])
+            for j in range(0, compu_num):
+                if self.dag.has_edge(i,j+mapper_num):
                     temp_str += " "
-                    temp_str += j.compuName
+                    temp_str += str(j+mapper_num)
             temp_str += "\n"
             f_open.write(temp_str)
-        for i in self.compuList:
-            temp_str = i.compuName
+        for i in range(0, compu_num):
+            temp_str = str(i+mapper_num)
             temp_str += " "
-            temp_str += str(i.compuSize)
-            for j in self.compuList:
-                if self.dag.has_edge(i,j):
+            temp_str += str(self.dag.node[i+mapper_num]['size'])
+            for j in range(i, compu_num):
+                if self.dag.has_edge(i+mapper_num,j+mapper_num):
                     temp_str += " "
-                    temp_str += j.compuName
+                    temp_str += str(j+mapper_num)
             temp_str += "\n"
             f_open.write(temp_str)
-
         f_open.close()
+
+    def txt2Dag(self):
+        base_dir = os.getcwd()
+        file_name = os.path.join(base_dir, 'dags', self.jobName + ".txt")
+        print("Read file %s"%(file_name))
+        f_open = open(file_name, 'r')
+        #first line: type mapper_num compu_num
+        line = f_open.readline().strip()
+        sp_line = line.split(' ')
+        #print(sp_line)
+        self.dagType = sp_line[0]
+        mapper_num = int(sp_line[1])
+        compu_num = int(sp_line[2])
+        # add all nodes
+        for i in range(0, mapper_num + compu_num):
+            self.dag.add_node(i)
+        # each line for each flow in dag, assign size and relationships
+        for i in range(0, mapper_num + compu_num):
+            line = f_open.readline().strip()
+            sp_line = line.split(' ')
+            self.dag.node[i]['size'] = float(sp_line[1])
+            # this node has children
+            if len(sp_line) > 2:
+                for j in range(0, len(sp_line) - 2):
+                    self.dag.add_edge(i, int(sp_line[2+j])) 
+        return self.dagType, compu_num
 '''
 j = Job()
 j.set_attributes(100, [1,2],[3,4],[100,300])
