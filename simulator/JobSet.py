@@ -212,23 +212,27 @@ class JobSet:
 
     # === TO DO ====== where to assign the compute size ?
     # generate dag relationship and task size
-    def genDags(self):
+    def genDags(self, dag_option):
         for j in self.jobsList:
-            '''
-            #1--- generate a dag
-            dag_type = Constants.DNNDAG
-            #dag_type = Constants.WEBDAG
-            #dag_type = Constants.RANDOMDAG
-            j.dagType = dag_type
-            j.dag, compu_num = self.createOneDag(dag_type, len(j.mapperList))
-            #print(compu_num)
-            self.dagAttrs(j, dag_type)
-            j.dag2Txt()
-            '''
-
-            #2--- read a dag
-            dag_type, compu_num = j.txt2Dag()
-            self.dagAttrs(j, j.dagType)
+            if dag_option == 0:
+            
+                #1--- generate a dag
+                dag_type = Constants.DNNDAG
+                #dag_type = Constants.WEBDAG
+                #dag_type = Constants.RANDOMDAG
+                j.dagType = dag_type
+                j.dag, compu_num = self.createOneDag(dag_type, len(j.mapperList))
+                #print(compu_num)
+                self.dagAttrs(j, dag_type)
+                self.dagSize(j, dag_type)
+                j.dag2Txt()
+            elif dag_option == 1:
+                #2--- read a dag
+                dag_type, compu_num = j.txt2Dag()
+                self.dagAttrs(j, j.dagType)
+            else:
+                pass
+            
             for r in j.reducerList:
                 # assign the dag to each reducer
                 r.genTasks(compu_num)

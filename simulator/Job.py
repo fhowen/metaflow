@@ -99,6 +99,7 @@ class Job:
             if len(sp_line) > 2:
                 for j in range(0, len(sp_line) - 2):
                     self.dag.add_edge(i, int(sp_line[2+j])) 
+        f_open.close()
         return self.dagType, compu_num
 '''
 j = Job()
