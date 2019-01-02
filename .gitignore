@@ -114,3 +114,4 @@ venv.bak/
 /.vscode/
 
 /simulator/*.txt
+/*.exe
