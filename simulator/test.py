@@ -10,7 +10,7 @@ import sys
 if __name__ == '__main__':
     js = JobSet()
     js.readTrace()
-    js.genDags(0)
+    js.genDags(1)
     #js.storeDag()
     if len(sys.argv)>1:
         if sys.argv[1] == "MDAG" or sys.argv[1] == "SEBF" or sys.argv[1] == "FIFO":

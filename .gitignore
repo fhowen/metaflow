@@ -106,6 +106,9 @@ venv.bak/
 #trace files
 /simulator/dags/
 
+# ignore test.py
+/simulator/test.py
+
 #log files
 /simulator/logfile/*.csv
 /simulator/logfile/*.png
