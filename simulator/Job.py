@@ -10,7 +10,7 @@ class Job:
     __slots__ = ['jobName', 'jobID', 'jobActive', 'submitTime', \
                  'startTime', 'finishTime', 'flowFinishTime', \
                  'finReducerNum', 'reducerList', 'mapperList', \
-                 'dag', 'dagType']
+                 'dag', 'dagType', 'remainTime']
     #job index from 1
     TotalJobNum = 1
     def __init__(self):
@@ -35,6 +35,8 @@ class Job:
             r.set_attributes(reducer_list[i], self.submitTime, mapper_list)
             self.reducerList.append(r)
 
+    def updateRemainTime(self):
+        pass
 
     def dag2Dot(self):
         base_dir = os.getcwd()

@@ -28,5 +28,11 @@ class Flow:
     
     def update_remain_size(self, new_sent):
         self.remainSize = self.remainSize - new_sent
+    
+    def updateAlphaBeta(self):
+        # update alpha
+
+        # update beta
+        pass
 
 
