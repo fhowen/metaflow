@@ -10,7 +10,7 @@ class Job:
     __slots__ = ['jobName', 'jobID', 'jobActive', 'submitTime', \
                  'startTime', 'finishTime', 'flowFinishTime', \
                  'finReducerNum', 'reducerList', 'mapperList', \
-                 'dag', 'dagType', 'remainTime']
+                 'dag', 'dagType', 'expectedTime']
     #job index from 1
     TotalJobNum = 1
     def __init__(self):
@@ -25,6 +25,7 @@ class Job:
         self.reducerList = []
         self.dag = nx.DiGraph()
         self.dagType = ''
+        self.expectedTime = 0.0
         Job.TotalJobNum += 1
     
     def set_attributes(self, submit_time, mapper_list, reducer_list, data_size_list):
@@ -35,8 +36,22 @@ class Job:
             r.set_attributes(reducer_list[i], self.submitTime, mapper_list)
             self.reducerList.append(r)
 
-    def updateRemainTime(self):
-        pass
+    def updateExpectedTime(self):
+        maxflow = 0.0
+        maxcomp = 0.0
+        for reducer in self.reducerList:
+            flowlist = reducer.flowList
+            for flow in flowlist:
+                flowtime = flow.remainSize/Constants.RACK_BITS_PER_SEC
+                if flowtime > maxflow:
+                    maxflow = flowtime
+            complist = reducer.compuList
+            comptime = 0.0
+            for comp in complist:
+                comptime = comptime + comp.remainSize/Constants.RACK_COMP_PER_SEC
+            if comptime > maxcomp:
+                maxcomp = comptime
+        self.expectedTime = maxflow + maxcomp
 
     def dag2Dot(self):
         base_dir = os.getcwd()
