@@ -247,6 +247,7 @@ class Simulator:
             self.active_Compus = []
             jobsAdded = 0
             #step1 : 添加新时间窗口的JOB，并将job和他包括的reducetask设置为submitted
+            #对job进行排序
             while curJob<TOTAL_JOBS:
                 job = self.jobset.jobsList[curJob]
                 if job.submitTime >= self.CURRENT_TIME + EPOCH_IN_MILLIS:
@@ -256,6 +257,9 @@ class Simulator:
                 self.numActiveJobs = self.numActiveJobs + 1
                 self.ActiveJobAdd(job)
                 curJob = curJob + 1
+            for ajob in self.active_jobs:
+                ajob.updateExpectedTime()
+            self.active_jobs.sort(key=lambda x:x.expectedTime)
             #step2 ：将active_jobs中的flows和依赖完成的compu展开，并
             for ajob in self.active_jobs:
                 for rtask in ajob.reducerList:
@@ -308,7 +312,6 @@ class Simulator:
                     comp.remainSize = 0.0
                     comp.finishTime = self.CURRENT_TIME
                     comp.parentReducer.finCompuNum += 1
-                    #print(len(comp.parentReducer.flowList))
                     if comp.parentReducer.finFlowNum>=len(comp.parentReducer.flowList)\
                         and comp.parentReducer.finCompuNum>=len(comp.parentReducer.compuList):
                         comp.parentReducer.finishTime = self.CURRENT_TIME
