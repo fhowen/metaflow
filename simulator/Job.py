@@ -39,19 +39,33 @@ class Job:
     def updateExpectedTime(self):
         maxflow = 0.0
         maxcomp = 0.0
+        ranksend = {}
+        rankrecv = {}
         for reducer in self.reducerList:
             flowlist = reducer.flowList
             for flow in flowlist:
-                flowtime = flow.remainSize/Constants.RACK_BITS_PER_SEC
-                if flowtime > maxflow:
-                    maxflow = flowtime
+                srack = flow.srcID
+                rrack = flow.dstID
+                if srack in ranksend.keys():
+                    ranksend[srack] += flow.remainSize
+                else:
+                    ranksend[srack] = flow.remainSize
+                if ranksend[srack] > maxflow:
+                    maxflow = ranksend[srack]
+                if rrack in rankrecv.keys():
+                    rankrecv[rrack] += flow.remainSize
+                else:
+                    rankrecv[rrack] = flow.remainSize
+                if rankrecv[rrack] > maxflow:
+                    maxflow = rankrecv[rrack]
             complist = reducer.compuList
-            comptime = 0.0
+            compsize = 0.0
             for comp in complist:
-                comptime = comptime + comp.remainSize/Constants.RACK_COMP_PER_SEC
-            if comptime > maxcomp:
-                maxcomp = comptime
-        self.expectedTime = maxflow + maxcomp
+                compsize = compsize + comp.remainSize
+            if compsize > maxcomp:
+                maxcomp = compsize
+        self.expectedTime = maxflow/Constants.RACK_BITS_PER_SEC \
+                            + maxcomp/Constants.RACK_COMP_PER_SEC
 
     def dag2Dot(self):
         base_dir = os.getcwd()
