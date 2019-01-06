@@ -42,7 +42,7 @@ class Simulator:
             job.reducerList[i].reducerActive = Constants.SUBMITTED
     
     def SortActiveFLows(self):
-        self.active_flows.sort(key=lambda x:(self.active_jobs.index(x.parentJob),-x.alpha,x.beta))
+        self.active_flows.sort(key=lambda x:(self.active_jobs.index(x.parentJob),-x.alpha,-x.beta))
     
     def resetBpsCpsFree(self):
         for i in range(Constants.MACHINENUM):
