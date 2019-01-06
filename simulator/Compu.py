@@ -4,7 +4,7 @@ import networkx as nx
 class Compu:
     __slots__ = ['compuName', 'parentReducer', 'parentJob', 'compuID', \
                  'locationID', 'compuSize', 'startTime', 'finishTime', \
-                 'remainSize', 'currentCps']
+                 'remainSize', 'currentCps', 'neededFlow']
                  
     TotalCompuNum = 0
 
@@ -13,6 +13,7 @@ class Compu:
         self.parentReducer = parent_reducer
         self.parentJob = self.parentReducer.parentJob
         self.compuID = Compu.TotalCompuNum
+        self.neededFlow = []
         Compu.TotalCompuNum += 1
     
     def set_attributes(self, location_id, compu_size):

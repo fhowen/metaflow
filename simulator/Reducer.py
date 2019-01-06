@@ -28,6 +28,13 @@ class Reducer:
         Reducer.TotalReducerNum += 1
 
 
+    def updateAlphaBeta(self):
+        # update alpha
+
+        # update beta
+        pass
+
+
     def set_attributes(self, location_id, submit_time, mapper_list):
         self.locationID = location_id
         self.submitTime = submit_time

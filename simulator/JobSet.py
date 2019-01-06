@@ -209,7 +209,11 @@ class JobSet:
                 u = u - reducer.mapperNum
                 reducer.dag.add_edge(reducer.compuList[u], \
                                      reducer.compuList[v])
-        # copy attrs
+        # init the neededFlow list in compu task
+        for j in range(len(reducer.compuList)):
+            for i in range(len(reducer.flowList)):
+                if nx.has_path(reducer.dag, reducer.flowList[i], reducer.compuList[j]):
+                    reducer.compuList[j].neededFlow.append(i)
 
     # === TO DO ====== where to assign the compute size ?
     # generate dag relationship and task size
@@ -218,9 +222,9 @@ class JobSet:
             if dag_option == 0:
             
                 #1--- generate a dag
-                #dag_type = Constants.DNNDAG
+                dag_type = Constants.DNNDAG
                 #dag_type = Constants.WEBDAG
-                dag_type = Constants.RANDOMDAG
+                #dag_type = Constants.RANDOMDAG
                 j.dagType = dag_type
                 j.dag, compu_num = self.createOneDag(dag_type, len(j.mapperList))
                 #print(compu_num)
