@@ -265,10 +265,10 @@ class Simulator:
                 for rtask in ajob.reducerList:
                     if rtask.reducerActive == Constants.SUBMITTED \
                         or rtask.reducerActive == Constants.STARTED:
-                        random.shuffle(rtask.flowList)
+                        #random.shuffle(rtask.flowList)
                         for flow in rtask.flowList:
                             if flow.remainSize>Constants.ZERO:
-                                flow.beta = flow.remainSize
+                                #flow.beta = flow.remainSize
                                 self.active_flows.append(flow)
                         for compu in rtask.compuList:
                             isready = compu.is_ready()
