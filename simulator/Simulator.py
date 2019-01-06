@@ -237,8 +237,7 @@ class Simulator:
                 self.rackinfos[RecvRack].UsedRecvBpsPro[flow.flowName] = flow.currentBps/Constants.RACK_BITS_PER_SEC
                 self.sendBpsFree[SendRack] = self.sendBpsFree[SendRack] - flow.currentBps
                 self.recvBpsFree[RecvRack] = self.recvBpsFree[RecvRack] - flow.currentBps
-    def AMDAG_Distribution(self, EPOCH_IN_MILLIS):
-        pass
+
     def simulate(self, EPOCH_IN_MILLIS, saveDetail = False, debugLevel=0):
         curJob = 0
         TOTAL_JOBS = len(self.jobset.jobsList)
@@ -259,6 +258,7 @@ class Simulator:
                 curJob = curJob + 1
             for ajob in self.active_jobs:
                 ajob.updateExpectedTime()
+                ajob.updateAlphaBeta()
             self.active_jobs.sort(key=lambda x:x.expectedTime)
             #step2 ：将active_jobs中的flows和依赖完成的compu展开，并
             for ajob in self.active_jobs:
@@ -273,9 +273,7 @@ class Simulator:
                         for compu in rtask.compuList:
                             isready = compu.is_ready()
                             if  compu.remainSize > Constants.ZERO and isready:
-                                self.active_Compus.append(compu) 
-            #if len(self.active_flows)>0:
-            #    print(self.active_flows[0].flowName,self.active_flows[0].remainSize)     
+                                self.active_Compus.append(compu)     
             #step3 ：将active_flows排序，给各个active的flow安排bps，以及active的compu安排cps
             self.resetBpsCpsFree()
             if self.algorithm == "FIFO":
@@ -325,8 +323,7 @@ class Simulator:
                             self.FinishedJobs.append(comp.parentJob.jobName)   
                             self.active_jobs.remove(comp.parentJob)   
                             self.numActiveJobs = self.numActiveJobs - 1
-            for unfinjob in self.active_jobs:
-                unfinjob.updateAlphaBeta()
+            
             self.debug_info(level = debugLevel)
             if saveDetail:
                 self.savelog(1)
