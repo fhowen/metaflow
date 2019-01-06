@@ -47,7 +47,7 @@ class Reducer:
                     chlid_compu = self.dag.successors(self.flowList[i])[0]
                     cost = 0
                     for k in chlid_compu.neededFlow:
-                        cost += self.flowList[k].remainSize
+                        cost -= self.flowList[k].remainSize
                     self.flowList[i].beta = cost
 
     def set_attributes(self, location_id, submit_time, mapper_list):
