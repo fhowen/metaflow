@@ -46,7 +46,7 @@ class JobSet:
                 cursor += 1
             self.addJob(submit_time, mapper_list, reducer_list, data_size_list)
         f.close()
-    
+    '''
     #set  alpha, bebta
     def dagAttrs(self, job, dag_type):
         mapper_num = len(job.mapperList)
@@ -75,39 +75,8 @@ class JobSet:
             job.dag.remove_node("End_node")
         else:
             pass
+    '''
 
-    def dagSize(self, job, dag_type):
-        mapper_num = len(job.mapperList)
-        compu_num = job.dag.number_of_nodes() - mapper_num
-        #1 set alpha and beta
-        if dag_type == Constants.DNNDAG:
-            base = (mapper_num+1)*mapper_num/2
-            share = job.reducerList[0].totalBytes/base
-            for i in range(0, mapper_num):
-                # set flow size
-                job.dag.node[i]['size'] = share*(i+1)
-                #job.dag.node[i]['size'] = job.reducerList[0].totalBytes/mapper_num
-            for i in range(mapper_num, mapper_num + compu_num):
-                #print(mapper_num, compu_num)
-                # set compu size
-                job.dag.node[i]['size'] = 10*((i-mapper_num)%3 + 2)
-        elif dag_type == Constants.WEBDAG:
-            for i in range(0, mapper_num):
-                # set flow size
-                job.dag.node[i]['size'] = job.reducerList[0].totalBytes/mapper_num
-            for i in range(mapper_num, mapper_num + compu_num):
-                # set compu size
-                job.dag.node[i]['size'] = 10*((i-mapper_num)%3 + 2)
-        elif dag_type == Constants.RANDOMDAG:
-            # set size
-            for i in range(0, mapper_num):
-                # set flow size
-                job.dag.node[i]['size'] = job.reducerList[0].totalBytes/mapper_num
-            for i in range(mapper_num, mapper_num + compu_num):
-                # set compu size
-                job.dag.node[i]['size'] = 10*((i-mapper_num)%3 + 2)
-        else:
-            pass
     #create the uniform dag for one job
     def createOneDag(self, dag_type, mapper_num):
         dag = nx.DiGraph()
@@ -224,9 +193,9 @@ class JobSet:
         for j in self.jobsList:
             if dag_option == 0:
                 #1--- generate a dag
-                dag_type = Constants.DNNDAG
+                #dag_type = Constants.DNNDAG
                 #dag_type = Constants.WEBDAG
-                #dag_type = Constants.RANDOMDAG
+                dag_type = Constants.RANDOMDAG
                 j.dagType = dag_type
                 j.dag, compu_num = self.createOneDag(dag_type, len(j.mapperList))
                 j.dag2Txt()
@@ -242,8 +211,10 @@ class JobSet:
                 r.copyDagAttrs(dag_type)
                 if (dag_option ==0):
                     r.dagSize()
-                else:
-                    r.copyDagSize()
+            if dag_option == 0:
+                j.storeSize()
+            if dag_option == 1:
+                j.readSize()
 
     # store dag to .dot and .txt file
     def storeDag(self):

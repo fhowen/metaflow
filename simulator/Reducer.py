@@ -38,35 +38,37 @@ class Reducer:
             #print(self.reducerName,share)
             for i in range(0, mapper_num):
                 # set flow size
-                #job.dag.node[i]['size'] = share*(i+1)
                 self.flowList[i].flowSize = share*(i+1)
                 self.flowList[i].remainSize = self.flowList[i].flowSize
             for i in range(mapper_num, mapper_num + compu_num):
-                #print(mapper_num, compu_num)
                 # set compu size
-                #job.dag.node[i]['size'] = 10*((i-mapper_num)%3 + 2)
-                # 10*((i-mapper_num)%3 + 2)
                 #self.compuList[i-mapper_num].compuSize = 10*((i-mapper_num)%3 + 2)
                 self.compuList[i-mapper_num].compuSize = self.totalFlops/compu_num
                 self.compuList[i-mapper_num].remainSize = self.compuList[i-mapper_num].compuSize
-            #self.printReducer()
+            #
         elif self.dagType == Constants.WEBDAG:
             for i in range(0, mapper_num):
                 # set flow size
                 self.flowList[i].flowSize = self.totalBytes/mapper_num
+                self.flowList[i].remainSize = self.flowList[i].flowSize
             for i in range(mapper_num, mapper_num + compu_num):
                 # set compu size
-                self.compuList[i-mapper_num].compuSize = 10*((i-mapper_num)%3 + 2)
+                self.compuList[i-mapper_num].compuSize = self.totalFlops/compu_num
+                self.compuList[i-mapper_num].remainSize = self.compuList[i-mapper_num].compuSize
         elif self.dagType == Constants.RANDOMDAG:
             # set size
             for i in range(0, mapper_num):
                 # set flow size
                 self.flowList[i].flowSize = self.totalBytes/mapper_num
+                self.flowList[i].remainSize = self.flowList[i].flowSize
             for i in range(mapper_num, mapper_num + compu_num):
                 # set compu size
                 self.compuList[i-mapper_num].compuSize = 10*((i-mapper_num)%3 + 2)
+                self.compuList[i-mapper_num].remainSize = self.compuList[i-mapper_num].compuSize
+            self.printReducer()
         else:
             pass
+
 
     def printReducer(self):
         print("==========================")
@@ -85,28 +87,32 @@ class Reducer:
         pass
 
     def updateAlphaBeta(self):
-        for i in range(len(self.flowList)):
-            # for unfinished flow
-            if self.flowList[i].remainSize > Constants.ZERO:
-                # update alpha
-                alpha = 0
-                mermit = 0
-                for jtask in self.compuList:
-                    if i in jtask.neededFlow and (len(jtask.neededFlow) == 1) :
-                        alpha = 1
-                        mermit += jtask.compuSize
-                self.flowList[i].alpha = alpha
-                if alpha == 1:
-                    self.flowList[i].beta = mermit/self.flowList[i].remainSize        
-                # update beta
-                elif alpha == 0:
-                    #chlid_compu = self.dag.successors(self.flowList[i])[0]
-                    for h in self.dag.successors(self.flowList[i]):
-                        chlid_compu = h
-                    cost = 0
-                    for k in chlid_compu.neededFlow:
-                        cost -= self.flowList[k].remainSize
-                    self.flowList[i].beta = cost
+        if self.dagType != Constants.WEBDAG:
+            for i in range(len(self.flowList)):
+                # for unfinished flow
+                if self.flowList[i].remainSize > Constants.ZERO:
+                    # update alpha
+                    alpha = 0
+                    mermit = 0
+                    for jtask in self.compuList:
+                        if i in jtask.neededFlow and (len(jtask.neededFlow) == 1) :
+                            alpha = 1
+                            mermit += jtask.compuSize
+                    self.flowList[i].alpha = alpha
+                    if alpha == 1:
+                        self.flowList[i].beta = mermit/self.flowList[i].remainSize        
+                    # update beta
+                    elif alpha == 0:
+                        #chlid_compu = self.dag.successors(self.flowList[i])[0]
+                        for h in self.dag.successors(self.flowList[i]):
+                            chlid_compu = h
+                        cost = 0
+                        for k in chlid_compu.neededFlow:
+                            cost -= self.flowList[k].remainSize
+                        self.flowList[i].beta = cost
+        # TODO   for webdag
+        else:
+            pass
 
     def set_attributes(self, location_id, submit_time, mapper_list):
         self.locationID = location_id

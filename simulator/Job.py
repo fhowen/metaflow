@@ -136,13 +136,44 @@ class Job:
         for i in range(0, mapper_num + compu_num):
             line = f_open.readline().strip()
             sp_line = line.split(' ')
-            self.dag.node[i]['size'] = float(sp_line[1])
             # this node has children
-            if len(sp_line) > 2:
-                for j in range(0, len(sp_line) - 2):
-                    self.dag.add_edge(i, int(sp_line[2+j])) 
+            if len(sp_line) > 1:
+                for j in range(1, len(sp_line)):
+                    self.dag.add_edge(i, int(sp_line[j])) 
         f_open.close()
         return self.dagType, compu_num
+
+    def storeSize(self):
+        base_dir = os.getcwd()
+        file_name = os.path.join(base_dir, 'dags', self.jobName + "_SIZE.txt")
+        f_open = open(file_name, 'w')
+        for r in self.reducerList:
+            for i in r.flowList:
+                f_open.write(str(i.flowSize)+' ')
+            for j in r.compuList:
+                f_open.write(str(j.compuSize)+' ')
+            f_open.write("\n")
+        f_open.close()
+    
+    def readSize(self):
+        base_dir = os.getcwd()
+        file_name = os.path.join(base_dir, 'dags', self.jobName + "_SIZE.txt")
+        print("Read SIZE file %s"%(file_name))
+        f_open = open(file_name, 'r')
+        #each line for one reducer
+        for i in range(0, len(self.reducerList)):
+            line = f_open.readline().strip()
+            sp_line = line.split(' ')
+            cursor = 0
+            for f in self.reducerList[i].flowList:
+                f.flowSize = float(sp_line[cursor])
+                f.remainSize = f.flowSize
+                cursor += 1
+            for c in self.reducerList[i].compuList:
+                c.compuSize = float(sp_line[cursor])
+                c.remainSize = c.compuSize
+                cursor += 1
+        f_open.close()
 '''
 j = Job()
 j.set_attributes(100, [1,2],[3,4],[100,300])
