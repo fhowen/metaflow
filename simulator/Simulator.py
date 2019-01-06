@@ -324,7 +324,9 @@ class Simulator:
                             comp.parentJob.jobActive = Constants.FINISHED 
                             self.FinishedJobs.append(comp.parentJob.jobName)   
                             self.active_jobs.remove(comp.parentJob)   
-                            self.numActiveJobs = self.numActiveJobs - 1                                                    
+                            self.numActiveJobs = self.numActiveJobs - 1
+            for unfinjob in self.active_jobs:
+                unfinjob.updateAlphaBeta()
             self.debug_info(level = debugLevel)
             if saveDetail:
                 self.savelog(1)
