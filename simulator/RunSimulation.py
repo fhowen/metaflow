@@ -12,7 +12,7 @@ if __name__ == '__main__':
     js.readTrace()
     # if 0, generate new dags
     # if 1, read from existing *.txt files 
-    js.genDags(1)
+    js.genDags(0)
     #js.storeDag()
     if len(sys.argv)>1:
         if sys.argv[1] == "MDAG" or sys.argv[1] == "SEBF" or sys.argv[1] == "FIFO":
