@@ -81,13 +81,15 @@ class JobSet:
         compu_num = job.dag.number_of_nodes() - mapper_num
         #1 set alpha and beta
         if dag_type == Constants.DNNDAG:
+            base = (mapper_num+1)*mapper_num/2
+            share = job.reducerList[0].totalBytes/base
             for i in range(0, mapper_num):
                 # set flow size
-                job.dag.node[i]['size'] = job.reducerList[0].totalBytes/mapper_num
+                job.dag.node[i]['size'] = share*(i+1)
             for i in range(mapper_num, mapper_num + compu_num):
                 #print(mapper_num, compu_num)
                 # set compu size
-                job.dag.node[i]['size'] = 10*((i-mapper_num)%3 + 2)
+                job.dag.node[i]['size'] = 20*((i-mapper_num)%3 + 2)
         elif dag_type == Constants.WEBDAG:
             for i in range(0, mapper_num):
                 # set flow size
