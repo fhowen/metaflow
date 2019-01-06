@@ -66,6 +66,12 @@ class Job:
                 maxcomp = compsize
         self.expectedTime = maxflow/Constants.RACK_BITS_PER_SEC \
                             + maxcomp/Constants.RACK_COMP_PER_SEC
+    
+    def updateAlphaBeta(self):
+        for reducer in self.reducerList:
+            if reducer.reducerActive == Constants.SUBMITTED or \
+                reducer.reducerActive == Constants.STARTED:
+                reducer.updateAlphaBeta()
 
     def dag2Dot(self):
         base_dir = os.getcwd()
