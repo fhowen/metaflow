@@ -31,7 +31,7 @@ class Reducer:
     def updateAlphaBeta(self):
         for i in range(len(self.flowList)):
             # for unfinished flow
-            if self.flowList.remainSize > Constants.ZERO:
+            if self.flowList[i].remainSize > Constants.ZERO:
                 # update alpha
                 alpha = 0
                 mermit = 0
