@@ -31,10 +31,15 @@ class Job:
     def set_attributes(self, submit_time, mapper_list, reducer_list, data_size_list):
         self.submitTime = submit_time
         self.mapperList = mapper_list
+        flow_sum = 0
         for i in range(0, len(reducer_list)):
             r = Reducer("R"+self.jobName[1:] +"-"+str(i), data_size_list[i], self)
+            flow_sum += data_size_list[i]
             r.set_attributes(reducer_list[i], self.submitTime, mapper_list)
             self.reducerList.append(r)
+        compu_sum = (Constants.RACK_COMP_PER_SEC * flow_sum / Constants.RACK_BITS_PER_SEC )* Constants.C2F_RATIO
+        for r in self.reducerList:
+            r.totalFlops = compu_sum/len(self.reducerList)
 
     def updateExpectedTime(self):
         maxflow = 0.0

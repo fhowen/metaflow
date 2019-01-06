@@ -10,7 +10,7 @@ class Reducer:
     __slots__ = ['reducerName', 'reducerID', 'reducerActive', 'finishTime', \
                  'dag', 'flowList', 'compuList', 'totalBytes', 'parentJob', \
                  'startTime', 'finFlowNum', 'finCompuNum', 'locationID', \
-                 'submitTime', 'mapperList', 'mapperNum', 'dagType']
+                 'submitTime', 'mapperList', 'mapperNum', 'dagType', 'totalFlops']
     TotalReducerNum = 0
     def __init__(self, reducer_name, total_bytes, parent_job):
         self.reducerName = reducer_name
@@ -25,6 +25,7 @@ class Reducer:
         self.startTime = Constants.MAXTIME
         self.finFlowNum = 0
         self.finCompuNum = 0
+        self.totalFlops = 0
         Reducer.TotalReducerNum += 1
 
     def dagSize(self):
@@ -34,7 +35,7 @@ class Reducer:
         if self.dagType == Constants.DNNDAG:
             base = (mapper_num+1)*mapper_num/2
             share = self.totalBytes/base
-            print(self.reducerName,share)
+            #print(self.reducerName,share)
             for i in range(0, mapper_num):
                 # set flow size
                 #job.dag.node[i]['size'] = share*(i+1)
@@ -45,8 +46,9 @@ class Reducer:
                 # set compu size
                 #job.dag.node[i]['size'] = 10*((i-mapper_num)%3 + 2)
                 # 10*((i-mapper_num)%3 + 2)
-                self.compuList[i-mapper_num].compuSize = 10*((i-mapper_num)%3 + 2)
-                self.compuList[i-mapper_num].remainSize = 10*((i-mapper_num)%3 + 2)
+                #self.compuList[i-mapper_num].compuSize = 10*((i-mapper_num)%3 + 2)
+                self.compuList[i-mapper_num].compuSize = self.totalFlops/compu_num
+                self.compuList[i-mapper_num].remainSize = self.compuList[i-mapper_num].compuSize
             #self.printReducer()
         elif self.dagType == Constants.WEBDAG:
             for i in range(0, mapper_num):

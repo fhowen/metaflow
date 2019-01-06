@@ -125,9 +125,9 @@ if __name__ == "__main__":
     '''
 
     # job finish time comparision
-    file_1 = "logjobtime-MDAG2018-12-31-13-03-45.csv"
-    file_2 = "logjobtime-SEBF2018-12-31-13-04-01.csv"
-    file_3 = "logjobtime-FIFO2018-12-31-12-12-50.csv"
+    file_1 = "logjobtime-MDAG.csv"
+    file_2 = "logjobtime-SEBF.csv"
+    file_3 = "logjobtime-FIFO.csv"
     job_fintime(file_1, file_2, file_3)
     
 
