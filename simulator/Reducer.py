@@ -29,11 +29,26 @@ class Reducer:
 
 
     def updateAlphaBeta(self):
-        # update alpha
-
-        # update beta
-        pass
-
+        for i in range(len(self.flowList)):
+            # for unfinished flow
+            if self.flowList.remainSize > Constants.ZERO:
+                # update alpha
+                alpha = 0
+                mermit = 0
+                for jtask in self.compuList:
+                    if i in jtask.neededFlow and (len(jtask.neededFlow) == 1) :
+                        alpha = 1
+                        mermit += jtask.compuSize
+                self.flowList[i].alpha = alpha
+                if alpha == 1:
+                    self.flowList[i].beta = mermit/self.flowList[i].remainSize        
+                # update beta
+                elif alpha == 0:
+                    chlid_compu = self.dag.successors(self.flowList[i])[0]
+                    cost = 0
+                    for k in chlid_compu.neededFlow:
+                        cost += self.flowList[k].remainSize
+                    self.flowList[i].beta = cost
 
     def set_attributes(self, location_id, submit_time, mapper_list):
         self.locationID = location_id

@@ -28,6 +28,11 @@ class Flow:
     
     def update_remain_size(self, new_sent):
         self.remainSize = self.remainSize - new_sent
+
+    def update_graph(self):
+        for jtask in self.parentReducer.compuList:
+            if self.flowID in jtask.neededFlow:
+                jtask.neededFlow.remove(self.flowID)
     
 
 

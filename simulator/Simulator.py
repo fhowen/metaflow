@@ -300,10 +300,12 @@ class Simulator:
             #step4 ：开始仿真结算
             for flow in self.active_flows:
                 flow.remainSize = flow.remainSize - (EPOCH_IN_MILLIS/1000)*flow.currentBps
+                # a flow is finished
                 if flow.remainSize<Constants.ZERO and flow.finishTime>=Constants.MAXTIME:
                     flow.remainSize = 0.0
                     flow.finishTime = self.CURRENT_TIME
                     flow.parentReducer.finFlowNum += 1
+                    flow.update_graph()
                     if flow.parentReducer.finFlowNum>=len(flow.parentReducer.flowList):
                         flow.parentJob.flowFinishTime = self.CURRENT_TIME
             for comp in self.active_Compus:
