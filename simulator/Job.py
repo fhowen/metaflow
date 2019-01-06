@@ -92,8 +92,8 @@ class Job:
         f_open.write(str(self.dagType) + " " + str(mapper_num) + ' ' + str(compu_num) + '\n')
         for i in range(0, mapper_num):
             temp_str = str(i)
-            temp_str += " "
-            temp_str += str(self.dag.node[i]['size'])
+            #temp_str += " "
+            #temp_str += str(self.dag.node[i]['size'])
             for j in range(0, compu_num):
                 if self.dag.has_edge(i,j+mapper_num):
                     temp_str += " "
@@ -102,8 +102,8 @@ class Job:
             f_open.write(temp_str)
         for i in range(0, compu_num):
             temp_str = str(i+mapper_num)
-            temp_str += " "
-            temp_str += str(self.dag.node[i+mapper_num]['size'])
+            #temp_str += " "
+            #temp_str += str(self.dag.node[i+mapper_num]['size'])
             for j in range(i, compu_num):
                 if self.dag.has_edge(i+mapper_num,j+mapper_num):
                     temp_str += " "

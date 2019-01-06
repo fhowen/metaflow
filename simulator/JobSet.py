@@ -86,10 +86,11 @@ class JobSet:
             for i in range(0, mapper_num):
                 # set flow size
                 job.dag.node[i]['size'] = share*(i+1)
+                #job.dag.node[i]['size'] = job.reducerList[0].totalBytes/mapper_num
             for i in range(mapper_num, mapper_num + compu_num):
                 #print(mapper_num, compu_num)
                 # set compu size
-                job.dag.node[i]['size'] = 20*((i-mapper_num)%3 + 2)
+                job.dag.node[i]['size'] = 10*((i-mapper_num)%3 + 2)
         elif dag_type == Constants.WEBDAG:
             for i in range(0, mapper_num):
                 # set flow size
@@ -222,31 +223,27 @@ class JobSet:
     def genDags(self, dag_option):
         for j in self.jobsList:
             if dag_option == 0:
-            
                 #1--- generate a dag
                 dag_type = Constants.DNNDAG
                 #dag_type = Constants.WEBDAG
                 #dag_type = Constants.RANDOMDAG
                 j.dagType = dag_type
                 j.dag, compu_num = self.createOneDag(dag_type, len(j.mapperList))
-                #print(compu_num)
-                self.dagAttrs(j, dag_type)
-                self.dagSize(j, dag_type)
                 j.dag2Txt()
             elif dag_option == 1:
                 #2--- read a dag
                 dag_type, compu_num = j.txt2Dag()
-                self.dagAttrs(j, j.dagType)
             else:
                 pass
-            
             for r in j.reducerList:
                 # assign the dag to each reducer
                 r.genTasks(compu_num)
                 self.copyDag(j.dag, r, dag_type)
-                #r.bindDag(Constants.DNNDAG)
-                #r.initAlphaBeta()
                 r.copyDagAttrs(dag_type)
+                if (dag_option ==0):
+                    r.dagSize()
+                else:
+                    r.copyDagSize()
 
     # store dag to .dot and .txt file
     def storeDag(self):

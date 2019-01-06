@@ -238,7 +238,7 @@ class Simulator:
                 self.sendBpsFree[SendRack] = self.sendBpsFree[SendRack] - flow.currentBps
                 self.recvBpsFree[RecvRack] = self.recvBpsFree[RecvRack] - flow.currentBps
 
-    def simulate(self, EPOCH_IN_MILLIS, saveDetail = False, debugLevel=1):
+    def simulate(self, EPOCH_IN_MILLIS, saveDetail = False, debugLevel=0):
         curJob = 0
         TOTAL_JOBS = len(self.jobset.jobsList)
         while self.CURRENT_TIME<Constants.MAXTIME and (curJob<TOTAL_JOBS or self.numActiveJobs>0):
@@ -271,6 +271,7 @@ class Simulator:
                         temp_list = list(range(0, len(rtask.flowList)))
                         random.shuffle(temp_list)
                         for index in temp_list:
+                            #print("REMAIN",rtask.flowList[index].flowName,rtask.flowList[index].remainSize)
                             if rtask.flowList[index].remainSize > Constants.ZERO:
                                 self.active_flows.append(rtask.flowList[index])
                         '''
@@ -284,7 +285,6 @@ class Simulator:
                             isready = compu.is_ready()
                             if  compu.remainSize > Constants.ZERO and isready:
                                 self.active_Compus.append(compu)   
-                          
             #random.shuffle(self.active_flows)
             #step3 ：将active_flows排序，给各个active的flow安排bps，以及active的compu安排cps
             self.resetBpsCpsFree()

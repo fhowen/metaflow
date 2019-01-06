@@ -27,6 +27,60 @@ class Reducer:
         self.finCompuNum = 0
         Reducer.TotalReducerNum += 1
 
+    def dagSize(self):
+        mapper_num = self.mapperNum
+        compu_num = self.dag.number_of_nodes() - mapper_num
+        #1 set alpha and beta
+        if self.dagType == Constants.DNNDAG:
+            base = (mapper_num+1)*mapper_num/2
+            share = self.totalBytes/base
+            print(self.reducerName,share)
+            for i in range(0, mapper_num):
+                # set flow size
+                #job.dag.node[i]['size'] = share*(i+1)
+                self.flowList[i].flowSize = share*(i+1)
+                self.flowList[i].remainSize = self.flowList[i].flowSize
+            for i in range(mapper_num, mapper_num + compu_num):
+                #print(mapper_num, compu_num)
+                # set compu size
+                #job.dag.node[i]['size'] = 10*((i-mapper_num)%3 + 2)
+                # 10*((i-mapper_num)%3 + 2)
+                self.compuList[i-mapper_num].compuSize = 10*((i-mapper_num)%3 + 2)
+                self.compuList[i-mapper_num].remainSize = 10*((i-mapper_num)%3 + 2)
+            #self.printReducer()
+        elif self.dagType == Constants.WEBDAG:
+            for i in range(0, mapper_num):
+                # set flow size
+                self.flowList[i].flowSize = self.totalBytes/mapper_num
+            for i in range(mapper_num, mapper_num + compu_num):
+                # set compu size
+                self.compuList[i-mapper_num].compuSize = 10*((i-mapper_num)%3 + 2)
+        elif self.dagType == Constants.RANDOMDAG:
+            # set size
+            for i in range(0, mapper_num):
+                # set flow size
+                self.flowList[i].flowSize = self.totalBytes/mapper_num
+            for i in range(mapper_num, mapper_num + compu_num):
+                # set compu size
+                self.compuList[i-mapper_num].compuSize = 10*((i-mapper_num)%3 + 2)
+        else:
+            pass
+
+    def printReducer(self):
+        print("==========================")
+        print("DEBUG Task Info ")
+        for i in self.flowList:
+            print(i.flowName, i.flowSize)
+        for j in self.compuList:
+            print(j.compuName, j.compuSize)
+        print("DEBUG Deps Info")
+        for j in self.compuList:
+            for i in self.flowList:
+                if self.dag.has_edge(i, j):
+                    print("Has Edge", i.flowName, j.compuName)
+
+    def copyDagSize(self):
+        pass
 
     def updateAlphaBeta(self):
         for i in range(len(self.flowList)):
@@ -63,36 +117,13 @@ class Reducer:
 
     def copyDagAttrs(self, dag_type):
         if dag_type == Constants.DNNDAG:
-            # set alpha
-            for i in range(0, self.mapperNum):
-                self.flowList[i].alpha = self.parentJob.dag.node[i]['alpha']
-            # set beta
-            for i in self.flowList:
-                i.beta = i.remainSize
+            pass
         elif dag_type == Constants.WEBDAG:
-            # set alpha
-            for i in range(0, self.mapperNum):
-                self.flowList[i].alpha = self.mapperNum - int(self.reducerName.split('-')[2]) 
-            # set beta
-            for i in self.flowList:
-                i.beta = i.remainSize
+            pass
         elif dag_type == Constants.RANDOMDAG:
-            # set alpha
-            for i in range(0, self.mapperNum):
-                self.flowList[i].alpha = self.parentJob.dag.node[i]['alpha']
-            # set beta
-            for i in self.flowList:
-                i.beta = i.remainSize
+            pass
         else:
             pass
-        # copy size
-        for i in range(0, self.mapperNum):
-            self.flowList[i].flowSize = self.parentJob.dag.node[i]['size']
-            self.flowList[i].remainSize = self.flowList[i].flowSize
-            #print(self.flowList[i].flowSize)
-        for i in range(0, len(self.compuList)):
-            self.compuList[i].compuSize = self.parentJob.dag.node[i+self.mapperNum]['size']
-            self.compuList[i].remainSize = self.compuList[i].compuSize
 
     def genTasks(self, compu_num):
         self.__addFlows()
@@ -129,37 +160,6 @@ class Reducer:
             self.dag.add_edge(self.compuList[i],self.compuList[i+1])
         for i in range(0, len(self.flowList)):
             self.dag.add_edge(self.flowList[i], self.compuList[i])
-
-    def initAlphaBeta(self):
-        self.__initFlowsAlpha()
-        self.__initFlowsBeta()
-
-    def __initFlowsAlpha(self):
-        if self.dagType == Constants.DNNDAG:
-            for i in range(0, self.mapperNum):
-                self.flowList[i].alpha = self.mapperNum - i
-        else:
-            pass
-        '''
-        self.dag.add_node("End_node",mark="End")
-        for i in self.compuList:
-            self.dag.add_edge(i, self.getNodeByMark("End"))
-        for i in self.flowList:
-            p_list = nx.all_simple_paths(self.dag, source=i, target=self.getNodeByMark("End"))
-            max_rank = 0
-            for j in p_list:
-                if len(j)>max_rank:
-                    max_rank = len(j)
-            i.alpha = max_rank - 1
-        for i in self.compuList:
-            self.dag.remove_edge(i, self.getNodeByMark("End"))
-        self.dag.remove_node("End_node")
-        '''
-        
-    def __initFlowsBeta(self):
-        for i in self.flowList:
-            i.beta = i.remainSize
-
 
     def plotDag(self):
         labels = nx.get_node_attributes(self.dag,'mark')
