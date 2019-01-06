@@ -44,7 +44,9 @@ class Reducer:
                     self.flowList[i].beta = mermit/self.flowList[i].remainSize        
                 # update beta
                 elif alpha == 0:
-                    chlid_compu = self.dag.successors(self.flowList[i])[0]
+                    #chlid_compu = self.dag.successors(self.flowList[i])[0]
+                    for h in self.dag.successors(self.flowList[i]):
+                        chlid_compu = h
                     cost = 0
                     for k in chlid_compu.neededFlow:
                         cost -= self.flowList[k].remainSize
