@@ -193,9 +193,9 @@ class JobSet:
         for j in self.jobsList:
             if dag_option == 0:
                 #1--- generate a dag
-                dag_type = Constants.DNNDAG
+                #dag_type = Constants.DNNDAG
                 #dag_type = Constants.WEBDAG
-                #dag_type = Constants.RANDOMDAG
+                dag_type = Constants.RANDOMDAG
                 j.dagType = dag_type
                 j.dag, compu_num = self.createOneDag(dag_type, len(j.mapperList))
                 j.dag2Txt()
