@@ -69,8 +69,12 @@ class Job:
                 compsize = compsize + comp.remainSize
             if compsize > maxcomp:
                 maxcomp = compsize
-        self.expectedTime = maxflow/Constants.RACK_BITS_PER_SEC \
-                            + maxcomp/Constants.RACK_COMP_PER_SEC
+        #Note: exceptedTime = flowtime+comptime
+        #self.expectedTime = maxflow/Constants.RACK_BITS_PER_SEC \
+        #                    + maxcomp/Constants.RACK_COMP_PER_SEC
+        #Note: exceptedTime = max(flowtime, comptime)
+        self.expectedTime = max(maxflow/Constants.RACK_BITS_PER_SEC, \
+                            maxcomp/Constants.RACK_COMP_PER_SEC)
     
     def updateAlphaBeta(self):
         for reducer in self.reducerList:
