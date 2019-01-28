@@ -75,12 +75,21 @@ class Job:
         #Note: exceptedTime = max(flowtime, comptime)
         self.expectedTime = max(maxflow/Constants.RACK_BITS_PER_SEC, \
                             maxcomp/Constants.RACK_COMP_PER_SEC)
-    
+    # update alpha beta with each flow    
     def updateAlphaBeta(self):
         for reducer in self.reducerList:
             if reducer.reducerActive == Constants.SUBMITTED or \
                 reducer.reducerActive == Constants.STARTED:
                 reducer.updateAlphaBeta()
+
+    # TODO update alpha beta with metaflow
+    def updateMFAlphaBeta(self):
+        metaflowList = []
+        # 1 extract one metaflow
+        #for i in range(0, len(self.reducerList[0].compuList)):
+
+        # 2 calculate the alpha beta for metaflow
+        pass
 
     def dag2Dot(self):
         base_dir = os.getcwd()
