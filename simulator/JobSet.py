@@ -176,6 +176,8 @@ class JobSet:
             if u < reducer.mapperNum:
                 reducer.dag.add_edge(reducer.flowList[u], \
                                      reducer.compuList[v])
+                # set metaflow tag
+                reducer.flowList[u].metaflowTag = v
             # 2 compu --> compu 
             else:
                 u = u - reducer.mapperNum

@@ -3,7 +3,7 @@ import Constants
 class Flow:
     __slots__ = ['flowName', 'flowID', 'parentReducer', 'parentJob', 'alpha', \
                  'beta', 'startTime', 'srcID', 'dstID', 'flowSize', 'submitTime', \
-                 'finishTime', 'currentBps', 'remainSize']
+                 'finishTime', 'currentBps', 'remainSize','metaflowTag']
     
     TotalFlowNum = 0
     def __init__(self, flow_name, parent_reducer):
