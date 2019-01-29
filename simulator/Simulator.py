@@ -268,6 +268,8 @@ class Simulator:
                 else:
                     mf_non_ready.append(jobMFs[jid][mf_tag])
             # sort mf_ready and mf_non_ready
+            mf_ready.sort(key=lambda x: -sum([item.beta for item in x]))
+            mf_non_ready.sort(key=lambda x: -sum([item.beta for item in x]))
             # merge mf_ready and mf_non_ready
             mf_list = mf_ready + mf_non_ready
             # allocate bandwidth for mf_ready and mf_non_ready
@@ -333,12 +335,23 @@ class Simulator:
                                             machine_bps/flownum)
                         self.sendBpsFree[rflow.srcID] -= rflow.currentBps
                         self.recvBpsFree[rflow.dstID] -= rflow.currentBps
+                        self.rackinfos[rflow.srcID].UsedSendBpsPro[rflow.flowName] \
+                                    = rflow.currentBps/Constants.RACK_BITS_PER_SEC
+                        self.rackinfos[rflow.dstID].UsedRecvBpsPro[rflow.flowName] \
+                                    = rflow.currentBps/Constants.RACK_BITS_PER_SEC
                         result_flows.append(rflow)
+                        if rflow.parentJob.startTime>=Constants.MAXTIME:
+                            rflow.parentJob.startTime = self.CURRENT_TIME
+                        if rflow.parentReducer.startTime>=Constants.MAXTIME:
+                            rflow.parentReducer.startTime = self.CURRENT_TIME
+                        if rflow.startTime>=Constants.MAXTIME:
+                            rflow.startTime = self.CURRENT_TIME
         self.active_flows = result_flows  
+        
         
 
 
-    def simulate(self, EPOCH_IN_MILLIS, saveDetail = False, debugLevel=0):
+    def simulate(self, EPOCH_IN_MILLIS, saveDetail = False, debugLevel=1):
         curJob = 0
         TOTAL_JOBS = len(self.jobset.jobsList)
         while self.CURRENT_TIME<Constants.MAXTIME and (curJob<TOTAL_JOBS or self.numActiveJobs>0):
