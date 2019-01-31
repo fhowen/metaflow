@@ -1,3 +1,5 @@
+import itertools
+
 # represent 4,5,6,7
 node_list = [0,1,2,3]
 # represent edges 
@@ -12,8 +14,23 @@ direct edges
 in total , 12 variables
 '''
 edge_matrix = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]
+topo_set = []
+
+def generate_topos():
+    topo = []
+    for i in itertools.permutations('0123',4):
+        topo = []
+        topoStr = ' '.join(i)
+        for j in range(0,4):
+            topo.append(int(topoStr.split(' ')[j]))
+        #print(topo)
+        topo_set.append(topo)
+    print(topo_set)
+                    
+
 def topo_num():
     topoNum= 0
+    
     return topoNum
 
 def judge_loop():
@@ -73,6 +90,7 @@ def generate_dag():
 
 
 if __name__ == '__main__':
+    generate_topos()
     generate_dag()
 
 
