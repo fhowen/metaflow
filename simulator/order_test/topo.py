@@ -47,14 +47,25 @@ def topo_num():
     return topoNum
 
 def judge_loop():
+    nodenum = len(node_list)
+    b = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]
+    for i in range(nodenum):
+        for j in range(nodenum):
+            b[i][j] = edge_matrix[i][j]
+    for k in range(nodenum):
+        for i in range(nodenum):
+            for j in range(nodenum):
+                if b[i][j] == 1 or (b[i][k]==1 and b[k][j]==1):
+                    b[i][j] = 1
+    for i in range(nodenum):
+        if b[i][i] == 1:
+            return True
     return False
 
 def save_to_file(num):
     print(num)
     print(edge_matrix)
     pass
-
-
 
 def generate_dag():
     i = 0
@@ -103,7 +114,7 @@ def generate_dag():
                                                         num = topo_num()
                                                         if num != 0:
                                                             j += 1
-                                                        if num == 12:
+                                                        if num == 3:
                                                             save_to_file(num)
     #print(i)
     #print(j)
