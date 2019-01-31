@@ -1,5 +1,5 @@
 import itertools
-
+import networkx as nx
 # represent 4,5,6,7
 node_list = [0,1,2,3]
 # represent edges 
@@ -30,19 +30,35 @@ def generate_topos():
 
 def topo_num():
     topoNum= 0
-    
+    # for each topo sort
+    for topo in topo_set:
+        # for each edge
+        flag = True
+        for i in range(0,4):
+            for j in range(0,4):
+                # if edge exists from i -> j, i must exist before j in topo
+                if edge_matrix[i][j] == 1:
+                    index_i = topo.index(i)
+                    index_j = topo.index(j)
+                    if index_i > index_j:
+                        flag = False
+        if flag == True:
+            topoNum += 1
     return topoNum
 
 def judge_loop():
     return False
 
 def save_to_file(num):
+    print(num)
+    print(edge_matrix)
     pass
 
 
 
 def generate_dag():
     i = 0
+    j = 0
     for a_1 in range(0,2):
         edge_matrix[0][1] = a_1
         for a_2 in range(0,2):
@@ -85,8 +101,12 @@ def generate_dag():
                                                         continue
                                                     else:
                                                         num = topo_num()
-                                                        save_to_file(num)
-    print(i)
+                                                        if num != 0:
+                                                            j += 1
+                                                        if num == 12:
+                                                            save_to_file(num)
+    #print(i)
+    #print(j)
 
 
 if __name__ == '__main__':
