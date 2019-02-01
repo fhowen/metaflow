@@ -196,7 +196,122 @@ class Simulator:
                     maxalpha = self.active_flows[i].alpha
                     maxflow = i     
 
-    
+    def VARYS_Distribution(self, EPOCH_IN_MILLIS):
+        result_flows = []
+        jobCoflows = {}
+        for flow in self.active_flows:
+            jobid = flow.parentJob.jobID
+            if jobid in jobCoflows.keys():
+                jobCoflows[jobid].append(flow)
+            else:
+                jobCoflows[jobid] = []
+                jobCoflows[jobid].append(flow)
+        jids = list(jobCoflows.keys())
+        jids.sort()
+        for jid in jids:
+            sender_machine = {}
+            receiver_machine = {}
+            #step1:divide flows according to machines
+            for f in jobCoflows[jid]:
+                sid = f.srcID
+                rid = f.dstID
+                if sid in sender_machine.keys():
+                    sender_machine[sid].append(f)
+                else:
+                    sender_machine[sid] = []
+                    sender_machine[sid].append(f)
+                if rid in receiver_machine.keys():
+                    receiver_machine[rid].append(f)
+                else:
+                    receiver_machine[rid] = []
+                    receiver_machine[rid].append(f)  
+            #step2:calculate max time                
+            maxtime = -1
+            for sendid in sender_machine.keys():
+                remain_bps = self.sendBpsFree[sendid]
+                if remain_bps < Constants.ZERO:
+                    maxtime = Constants.MAXTIME
+                    break
+                mach_fsize = 0.0
+                for sflow in sender_machine[sendid]:
+                    mach_fsize += sflow.remainSize
+                if maxtime < mach_fsize/remain_bps:
+                    maxtime = mach_fsize/remain_bps
+            for recvid in receiver_machine.keys():
+                remain_bps = self.recvBpsFree[recvid]
+                if remain_bps < Constants.ZERO or maxtime == Constants.MAXTIME:
+                    maxtime = Constants.MAXTIME
+                    break
+                mach_fsize = 0.0
+                for rflow in receiver_machine[recvid]:
+                    mach_fsize += rflow.remainSize
+                if maxtime < mach_fsize/remain_bps:
+                    maxtime = mach_fsize/remain_bps
+            # step3:allocate bandwidth value 
+            if maxtime == Constants.MAXTIME:
+                continue
+            sendflow = []
+            for sendid in sender_machine.keys():
+                mach_fsize = 0.0
+                for sflow in sender_machine[sendid]:
+                    mach_fsize += sflow.remainSize
+                machine_bps = mach_fsize/maxtime
+                flownum = len(sender_machine[sendid])
+                for sflow in sender_machine[sendid]:
+                    sflow.currentBps = machine_bps/flownum
+                    sendflow.append(sflow)
+            recvflow = []
+            for recvid in receiver_machine.keys():
+                mach_fsize = 0.0
+                for rflow in receiver_machine[recvid]:
+                    mach_fsize += rflow.remainSize
+                machine_bps = mach_fsize/maxtime
+                flownum = len(receiver_machine[recvid])
+                for rflow in receiver_machine[recvid]:
+                    rflow.currentBps = machine_bps/flownum
+                    recvflow.append(rflow)
+            sendflow.sort(key=lambda x:x.flowID)
+            recvflow.sort(key=lambda x:x.flowID)
+            totalflownum = len(sendflow)
+            for i in range(totalflownum):
+                if sendflow[i].currentBps > recvflow[i].currentBps:
+                    result_flows.append(recvflow[i])
+                else:
+                    result_flows.append(sendflow[i])
+                curflow = result_flows[-1]
+                self.sendBpsFree[curflow.srcID] -= curflow.currentBps
+                self.recvBpsFree[curflow.dstID] -= curflow.currentBps
+                self.rackinfos[curflow.srcID].UsedSendBpsPro[curflow.flowName] \
+                            = curflow.currentBps/Constants.RACK_BITS_PER_SEC
+                self.rackinfos[curflow.dstID].UsedRecvBpsPro[curflow.flowName] \
+                            = curflow.currentBps/Constants.RACK_BITS_PER_SEC
+                if curflow.parentJob.startTime>=Constants.MAXTIME:
+                    curflow.parentJob.startTime = self.CURRENT_TIME
+                if curflow.parentReducer.startTime>=Constants.MAXTIME:
+                    curflow.parentReducer.startTime = self.CURRENT_TIME
+                if curflow.startTime>=Constants.MAXTIME:
+                    curflow.startTime = self.CURRENT_TIME 
+        # work conservation
+        for flow in result_flows:
+            SendRack = flow.srcID
+            RecvRack = flow.dstID
+            supportBps = min(self.sendBpsFree[SendRack], self.recvBpsFree[RecvRack])
+            if supportBps > Constants.ZERO:
+                if flow.parentJob.startTime>=Constants.MAXTIME:
+                    flow.parentJob.startTime = self.CURRENT_TIME
+                if flow.parentReducer.startTime>=Constants.MAXTIME:
+                    flow.parentReducer.startTime = self.CURRENT_TIME
+                if flow.startTime>=Constants.MAXTIME:
+                    flow.startTime = self.CURRENT_TIME
+                idealbps = (flow.remainSize-flow.currentBps*(EPOCH_IN_MILLIS/1000))/(EPOCH_IN_MILLIS/1000)
+                flow.currentBps += min(idealbps, supportBps)
+                self.rackinfos[SendRack].UsedSendBpsPro[flow.flowName] = flow.currentBps/Constants.RACK_BITS_PER_SEC
+                self.rackinfos[RecvRack].UsedRecvBpsPro[flow.flowName] = flow.currentBps/Constants.RACK_BITS_PER_SEC
+                self.sendBpsFree[SendRack] = self.sendBpsFree[SendRack] - min(idealbps, supportBps)
+                self.recvBpsFree[RecvRack] = self.recvBpsFree[RecvRack] - min(idealbps, supportBps) 
+        self.active_flows = result_flows
+                   
+            
     def FIFO_Distribution(self, EPOCH_IN_MILLIS):
         for flow in self.active_flows:
             SendRack = flow.srcID
@@ -216,29 +331,9 @@ class Simulator:
                 self.rackinfos[RecvRack].UsedRecvBpsPro[flow.flowName] = flow.currentBps/Constants.RACK_BITS_PER_SEC
                 self.sendBpsFree[SendRack] = self.sendBpsFree[SendRack] - flow.currentBps
                 self.recvBpsFree[RecvRack] = self.recvBpsFree[RecvRack] - flow.currentBps
+                
     
     def MDAG_Distribution(self, EPOCH_IN_MILLIS, MDDA = True):
-        ''' 
-        self.SortActiveFLows()
-        for flow in self.active_flows:
-            SendRack = flow.srcID
-            RecvRack = flow.dstID
-            supportBps = min(self.sendBpsFree[SendRack], self.recvBpsFree[RecvRack])
-            flow.currentBps = 0.0
-            if supportBps > Constants.ZERO:
-                if flow.parentJob.startTime>=Constants.MAXTIME:
-                    flow.parentJob.startTime = self.CURRENT_TIME
-                if flow.parentReducer.startTime>=Constants.MAXTIME:
-                    flow.parentReducer.startTime = self.CURRENT_TIME
-                if flow.startTime>=Constants.MAXTIME:
-                    flow.startTime = self.CURRENT_TIME
-                idealbps = (flow.remainSize)/(EPOCH_IN_MILLIS/1000)
-                flow.currentBps = min(idealbps, supportBps)
-                self.rackinfos[SendRack].UsedSendBpsPro[flow.flowName] = flow.currentBps/Constants.RACK_BITS_PER_SEC
-                self.rackinfos[RecvRack].UsedRecvBpsPro[flow.flowName] = flow.currentBps/Constants.RACK_BITS_PER_SEC
-                self.sendBpsFree[SendRack] = self.sendBpsFree[SendRack] - flow.currentBps
-                self.recvBpsFree[RecvRack] = self.recvBpsFree[RecvRack] - flow.currentBps
-        '''
         result_flows = []
         jobMFs = {}
         for flow in self.active_flows:
@@ -254,7 +349,9 @@ class Simulator:
                 jobMFs[jobid] = {}
                 jobMFs[jobid][mftag] = []
                 jobMFs[jobid][mftag].append(flow)
-        for jid in jobMFs.keys():
+        jids = list(jobMFs.keys())
+        jids.sort()
+        for jid in jids:
             mf_ready = []
             mf_non_ready = []
             for mf_tag in jobMFs[jid].keys():
@@ -339,6 +436,7 @@ class Simulator:
                     # step3: allocate bandwidth value = max(remain, flowsize/slowest time)
                     if maxtime == Constants.MAXTIME:
                         continue
+                    sendflow = []
                     for sendid in sender_machine.keys():
                         mach_fsize = 0.0
                         for sflow in sender_machine[sendid]:
@@ -347,6 +445,9 @@ class Simulator:
                         flownum = len(sender_machine[sendid])
                         for sflow in sender_machine[sendid]:
                             sflow.currentBps = machine_bps/flownum
+                            sendflow.append(sflow)
+
+                    recvflow = []
                     for recvid in receiver_machine.keys():
                         mach_fsize = 0.0
                         for rflow in receiver_machine[recvid]:
@@ -354,21 +455,28 @@ class Simulator:
                         machine_bps = mach_fsize/maxtime
                         flownum = len(receiver_machine[recvid])
                         for rflow in receiver_machine[recvid]:
-                            rflow.currentBps = min(rflow.currentBps, \
-                                            machine_bps/flownum)
-                            self.sendBpsFree[rflow.srcID] -= rflow.currentBps
-                            self.recvBpsFree[rflow.dstID] -= rflow.currentBps
-                            self.rackinfos[rflow.srcID].UsedSendBpsPro[rflow.flowName] \
-                                    = rflow.currentBps/Constants.RACK_BITS_PER_SEC
-                            self.rackinfos[rflow.dstID].UsedRecvBpsPro[rflow.flowName] \
-                                    = rflow.currentBps/Constants.RACK_BITS_PER_SEC
-                            result_flows.append(rflow)
-                            if rflow.parentJob.startTime>=Constants.MAXTIME:
-                                rflow.parentJob.startTime = self.CURRENT_TIME
-                            if rflow.parentReducer.startTime>=Constants.MAXTIME:
-                                rflow.parentReducer.startTime = self.CURRENT_TIME
-                            if rflow.startTime>=Constants.MAXTIME:
-                                rflow.startTime = self.CURRENT_TIME 
+                            recvflow.append(rflow)
+                    sendflow.sort(key=lambda x:x.flowID)
+                    recvflow.sort(key=lambda x:x.flowID)
+                    mflownum = len(sendflow)
+                    for i in range(mflownum):
+                        if sendflow[i].currentBps > recvflow[i].currentBps:
+                            result_flows.append(recvflow[i])
+                        else:
+                            result_flows.append(sendflow[i])
+                        rflow = result_flows[-1]
+                        self.sendBpsFree[rflow.srcID] -= rflow.currentBps
+                        self.recvBpsFree[rflow.dstID] -= rflow.currentBps
+                        self.rackinfos[rflow.srcID].UsedSendBpsPro[rflow.flowName] \
+                                = rflow.currentBps/Constants.RACK_BITS_PER_SEC
+                        self.rackinfos[rflow.dstID].UsedRecvBpsPro[rflow.flowName] \
+                                = rflow.currentBps/Constants.RACK_BITS_PER_SEC
+                        if rflow.parentJob.startTime>=Constants.MAXTIME:
+                            rflow.parentJob.startTime = self.CURRENT_TIME
+                        if rflow.parentReducer.startTime>=Constants.MAXTIME:
+                            rflow.parentReducer.startTime = self.CURRENT_TIME
+                        if rflow.startTime>=Constants.MAXTIME:
+                            rflow.startTime = self.CURRENT_TIME 
         #work conservation  
         if MDDA == True:
             result_flows.sort(key=lambda x:(self.active_jobs.index(x.parentJob),-x.alpha,-x.beta))
@@ -439,14 +547,14 @@ class Simulator:
                         for compu in rtask.compuList:
                             isready = compu.is_ready()
                             if  compu.remainSize > Constants.ZERO and isready:
-                                self.active_Compus.append(compu)   
+                                self.active_Compus.append(compu) 
             #random.shuffle(self.active_flows)
             #step3 ：将active_flows排序，给各个active的flow安排bps，以及active的compu安排cps
             self.resetBpsCpsFree()
             if self.algorithm == "FIFO":
                 self.FIFO_Distribution(EPOCH_IN_MILLIS)
-            elif self.algorithm == "SEBF":
-                self.SEBF_Distribution(EPOCH_IN_MILLIS)
+            elif self.algorithm == "VARYS":
+                self.VARYS_Distribution(EPOCH_IN_MILLIS)
             else:
                 self.MDAG_Distribution(EPOCH_IN_MILLIS)    
             for comp in self.active_Compus:
