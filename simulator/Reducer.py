@@ -38,7 +38,7 @@ class Reducer:
             #print(self.reducerName,share)
             for i in range(0, mapper_num):
                 # set flow size
-                self.flowList[i].flowSize = share*(i+1)
+                self.flowList[i].flowSize = self.totalBytes/mapper_num
                 self.flowList[i].remainSize = self.flowList[i].flowSize
             for i in range(mapper_num, mapper_num + compu_num):
                 # set compu size
