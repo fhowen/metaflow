@@ -63,7 +63,7 @@ class Reducer:
                 self.flowList[i].remainSize = self.flowList[i].flowSize
             for i in range(mapper_num, mapper_num + compu_num):
                 # set compu size
-                self.compuList[i-mapper_num].compuSize = 10*((i-mapper_num)%3 + 2)
+                self.compuList[i-mapper_num].compuSize = self.totalFlops/compu_num
                 self.compuList[i-mapper_num].remainSize = self.compuList[i-mapper_num].compuSize
             self.printReducer()
         else:
