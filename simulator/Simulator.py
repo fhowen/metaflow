@@ -6,6 +6,8 @@ import os
 import random
 class Simulator:
     def __init__(self, jobset, algorithm="MDAG"):
+        self.working_statics = []
+        self.ideal_statics = []
         self.algorithm = algorithm
         self.datetime = time.time()
         self.rackstatic_sendbps = []
@@ -35,9 +37,9 @@ class Simulator:
             self.rackstatic_cps.append([])
 
     def ActiveJobAdd(self, job):
-        #我们这里直接按照Job的时间顺序进行插入，后面可能设计到其他的插入排序方法
+        # Insert jobsa into active_jobs in chronological order
         self.active_jobs.append(job)
-        #对添加的job中的reducer设置为active
+        # set the reducer to submitted
         for i in range(len(job.reducerList)):
             job.reducerList[i].reducerActive = Constants.SUBMITTED
     
@@ -52,16 +54,18 @@ class Simulator:
             self.rackinfos[i].resetinfo()
 
     def debug_info(self, level = 0):
-        print("CURRENT:",self.CURRENT_TIME/1000)
-        print("Active Jobs:",end=' ')
-        for activeJob in self.active_jobs:
-            print(activeJob.jobName,end=',')
-        print("\nFinished Jobs",end=' ')
-        for finJob in self.FinishedJobs:
-            print(finJob,end=',')   
+        if level>=0:
+            print("CURRENT:",self.CURRENT_TIME/1000)
+            print("Active Jobs:",end=' ')
+            for activeJob in self.active_jobs:
+                print(activeJob.jobName,end=',')
+            print("\nFinished Jobs",end=' ')
+            for finJob in self.FinishedJobs:
+                print(finJob,end=',')   
         if level >= 1: 
             print("\n######Detail Info######")
         count = 0
+        working_num = 0
         for rackinfo in self.rackinfos:
             if rackinfo.UsedSendBpsPro or rackinfo.UsedRecvBpsPro or rackinfo.UsedCpsPro:
                 if level >= 1:
@@ -74,10 +78,14 @@ class Simulator:
                     self.static_recv += 1
                 if rackinfo.UsedCpsPro:
                     self.static_comp += 1
+                    working_num += 1
                 if rackinfo.UsedCpsPro and rackinfo.UsedRecvBpsPro:
                     self.static_recvcomp += 1
-            count += 1    
-        print("\n#########################")
+            count += 1  
+        self.working_statics.append(working_num) 
+        if level>=0: 
+            print("\n#########################")
+    
     def logjobtime(self):
         logfile = "logjobtime-" + self.algorithm + ".csv"
         logpath = os.path.join(Constants.LOGDIR,logfile)
@@ -90,6 +98,23 @@ class Simulator:
                     str(job.flowFinishTime) +"," + \
                     str(job.finishTime) + ",\n")
         f.close()
+
+    def logmachrate(self):
+        logfile = "logmachrate-" + self.algorithm + ".csv"
+        logpath = os.path.join(Constants.LOGDIR,logfile)
+        f = open(logpath, 'w')
+        totaltime = len(self.ideal_statics)
+        for i in range(totaltime):
+            f.write(str(self.ideal_statics[i])+",")
+        f.write("\n")
+        for i in range(totaltime):
+            f.write(str(self.working_statics[i])+",") 
+        f.write("\n")
+        for i in range(totaltime):
+            if self.ideal_statics[i]>0:
+                f.write(str(self.working_statics[i]/self.ideal_statics[i])+",") 
+            else:
+                f.write("1,") 
 
     def savelog(self, wlength):
         logfile = "logfile"+time.strftime('%Y-%m-%d-%H-%M-%S',time.localtime(self.datetime))+".csv"
@@ -126,75 +151,6 @@ class Simulator:
                     f.write(str(self.rackstatic_cps[i][j])+",")
                 f.write("\n")
             f.close()
-
-    def SEBF_Distribution(self, EPOCH_IN_MILLIS):
-        CurJid = -1
-        s = 0
-        maxalpha = -1
-        maxflow = -1
-        for count in range(len(self.active_flows)+1):
-            if len(self.active_flows) == 0:
-                break
-            if count==len(self.active_flows):
-                i = len(self.active_flows)-1
-            else:
-                i = count
-            self.active_flows[i].currentBps = 0.0
-            SendRack = self.active_flows[i].srcID
-            RecvRack = self.active_flows[i].dstID
-            supportBps = min(self.sendBpsFree[SendRack], self.recvBpsFree[RecvRack])
-            if supportBps > Constants.ZERO:
-                self.active_flows[i].alpha = (self.active_flows[i].remainSize)/supportBps
-            else:
-                self.active_flows[i].alpha = -1
-            if CurJid!=self.active_flows[i].parentJob.jobID or count == len(self.active_flows):
-                if maxalpha!=-1:
-                    srack = self.active_flows[maxflow].srcID
-                    rrack = self.active_flows[maxflow].dstID
-                    remainBps = min(self.sendBpsFree[srack], self.recvBpsFree[rrack])
-                    if remainBps>Constants.ZERO:
-                        if self.active_flows[maxflow].parentJob.startTime>=Constants.MAXTIME:
-                            self.active_flows[maxflow].parentJob.startTime = self.CURRENT_TIME
-                        if self.active_flows[maxflow].parentReducer.startTime>=Constants.MAXTIME:
-                            self.active_flows[maxflow].parentReducer.startTime = self.CURRENT_TIME
-                        if self.active_flows[maxflow].startTime>=Constants.MAXTIME:
-                            self.active_flows[maxflow].startTime = self.CURRENT_TIME
-                        self.active_flows[maxflow].currentBps = \
-                            min(remainBps,(self.active_flows[maxflow].remainSize)/(EPOCH_IN_MILLIS/1000))
-                        self.sendBpsFree[srack] -= self.active_flows[maxflow].currentBps
-                        self.recvBpsFree[rrack] -= self.active_flows[maxflow].currentBps
-                        self.rackinfos[srack].UsedSendBpsPro[self.active_flows[maxflow].flowName] = \
-                                    self.active_flows[maxflow].currentBps/Constants.RACK_BITS_PER_SEC
-                        self.rackinfos[rrack].UsedRecvBpsPro[self.active_flows[maxflow].flowName] = \
-                                    self.active_flows[maxflow].currentBps/Constants.RACK_BITS_PER_SEC
-                while s<count:
-                    if s!=maxflow and maxalpha!=-1:
-                        srack = self.active_flows[s].srcID
-                        rrack = self.active_flows[s].dstID
-                        remainBps = min(self.sendBpsFree[srack], self.recvBpsFree[rrack])
-                        if remainBps>Constants.ZERO:
-                            if self.active_flows[s].parentJob.startTime>=Constants.MAXTIME:
-                                self.active_flows[s].parentJob.startTime = self.CURRENT_TIME
-                            if self.active_flows[s].parentReducer.startTime>=Constants.MAXTIME:
-                                self.active_flows[s].parentReducer.startTime = self.CURRENT_TIME
-                            if self.active_flows[s].startTime>=Constants.MAXTIME:
-                                self.active_flows[s].startTime = self.CURRENT_TIME
-                            idealbps = (self.active_flows[s].remainSize)/(EPOCH_IN_MILLIS/1000)
-                            self.active_flows[s].currentBps = min(idealbps, remainBps)
-                            self.sendBpsFree[srack] -= self.active_flows[s].currentBps
-                            self.recvBpsFree[rrack] -= self.active_flows[s].currentBps
-                            self.rackinfos[srack].UsedSendBpsPro[self.active_flows[s].flowName] = \
-                                    self.active_flows[s].currentBps/Constants.RACK_BITS_PER_SEC
-                            self.rackinfos[rrack].UsedRecvBpsPro[self.active_flows[s].flowName] = \
-                                    self.active_flows[s].currentBps/Constants.RACK_BITS_PER_SEC                        
-                    s += 1
-                maxalpha = self.active_flows[i].alpha
-                maxflow = i
-                CurJid = self.active_flows[i].parentJob.jobID
-            else:
-                if self.active_flows[i].alpha > maxalpha:
-                    maxalpha = self.active_flows[i].alpha
-                    maxflow = i     
 
     def VARYS_Distribution(self, EPOCH_IN_MILLIS):
         result_flows = []
@@ -310,8 +266,7 @@ class Simulator:
                 self.sendBpsFree[SendRack] = self.sendBpsFree[SendRack] - min(idealbps, supportBps)
                 self.recvBpsFree[RecvRack] = self.recvBpsFree[RecvRack] - min(idealbps, supportBps) 
         self.active_flows = result_flows
-                   
-            
+                        
     def FIFO_Distribution(self, EPOCH_IN_MILLIS):
         for flow in self.active_flows:
             SendRack = flow.srcID
@@ -332,7 +287,6 @@ class Simulator:
                 self.sendBpsFree[SendRack] = self.sendBpsFree[SendRack] - flow.currentBps
                 self.recvBpsFree[RecvRack] = self.recvBpsFree[RecvRack] - flow.currentBps
                 
-    
     def MDAG_Distribution(self, EPOCH_IN_MILLIS, MDDA = True):
         result_flows = []
         jobMFs = {}
@@ -350,7 +304,6 @@ class Simulator:
                 jobMFs[jobid][mftag] = []
                 jobMFs[jobid][mftag].append(flow)
         jids = list(jobMFs.keys())
-        jids.sort()
         for jid in jids:
             mf_ready = []
             mf_non_ready = []
@@ -499,8 +452,6 @@ class Simulator:
                     self.recvBpsFree[RecvRack] = self.recvBpsFree[RecvRack] - min(idealbps, supportBps)
         self.active_flows = result_flows 
         
-        
-
     def simulate(self, EPOCH_IN_MILLIS, saveDetail = False, debugLevel=1):
         curJob = 0
         TOTAL_JOBS = len(self.jobset.jobsList)
@@ -508,8 +459,7 @@ class Simulator:
             self.active_flows = []
             self.active_Compus = []
             jobsAdded = 0
-            #step1 : 添加新时间窗口的JOB，并将job和他包括的reducetask设置为submitted
-            #对job进行排序
+            #Step1: Add new jobs, Update the attitudes and Sort jobs
             while curJob<TOTAL_JOBS:
                 job = self.jobset.jobsList[curJob]
                 if job.submitTime >= self.CURRENT_TIME + EPOCH_IN_MILLIS:
@@ -522,34 +472,30 @@ class Simulator:
             for ajob in self.active_jobs:
                 ajob.updateExpectedTime()
                 ajob.updateAlphaBeta()
-            self.active_jobs.sort(key=lambda x:x.expectedTime)
-            #step2 ：将active_jobs中的flows和依赖完成的compu展开，并
+            if self.algorithm == "MDAG":
+                self.active_jobs.sort(key=lambda x:x.expectedTime)
+            #Step2: Extract flows and computes from jobs (+ calculate ideal_statics)
+            ideal_num = 0
+            working_mach = {}
             for ajob in self.active_jobs:
                 for rtask in ajob.reducerList:
                     if rtask.reducerActive == Constants.SUBMITTED \
                         or rtask.reducerActive == Constants.STARTED:
-                        #random.shuffle(rtask.flowList)
-                        
-                        # SEBF 
                         temp_list = list(range(0, len(rtask.flowList)))
-                        #random.shuffle(temp_list)
+                        #random.shuffle(temp_list) # random the flow
                         for index in temp_list:
-                            #print("REMAIN",rtask.flowList[index].flowName,rtask.flowList[index].remainSize)
                             if rtask.flowList[index].remainSize > Constants.ZERO:
                                 self.active_flows.append(rtask.flowList[index])
-                        '''
-                        # SEBF + optimize
-                        for flow in rtask.flowList:
-                            if flow.remainSize>Constants.ZERO:
-                                #flow.beta = flow.remainSize
-                                self.active_flows.append(flow)
-                        '''
                         for compu in rtask.compuList:
                             isready = compu.is_ready()
-                            if  compu.remainSize > Constants.ZERO and isready:
-                                self.active_Compus.append(compu) 
-            #random.shuffle(self.active_flows)
-            #step3 ：将active_flows排序，给各个active的flow安排bps，以及active的compu安排cps
+                            if  compu.remainSize > Constants.ZERO:
+                                if compu.locationID not in working_mach.keys():
+                                    ideal_num += 1
+                                    working_mach[compu.locationID] = True
+                                if isready:
+                                    self.active_Compus.append(compu) 
+            self.ideal_statics.append(ideal_num)
+            #Step3: Allocate bandwidth and processors
             self.resetBpsCpsFree()
             if self.algorithm == "FIFO":
                 self.FIFO_Distribution(EPOCH_IN_MILLIS)
@@ -570,10 +516,9 @@ class Simulator:
                     comp.currentCps = min(idealcps, supportCps)
                     self.rackinfos[RackId].UsedCpsPro[comp.compuName] = comp.currentCps/Constants.RACK_COMP_PER_SEC
                     self.rackCpsFree[RackId] = self.rackCpsFree[RackId] - comp.currentCps
-            #step4 ：开始仿真结算
+            #Step4: Start simulation including network and computation 
             for flow in self.active_flows:
                 flow.remainSize = flow.remainSize - (EPOCH_IN_MILLIS/1000)*flow.currentBps
-                # a flow is finished
                 if flow.remainSize<Constants.ZERO and flow.finishTime>=Constants.MAXTIME:
                     flow.remainSize = 0.0
                     flow.finishTime = self.CURRENT_TIME
@@ -598,12 +543,13 @@ class Simulator:
                             self.FinishedJobs.append(comp.parentJob.jobName)   
                             self.active_jobs.remove(comp.parentJob)   
                             self.numActiveJobs = self.numActiveJobs - 1
-            
+            #Step5: Statistics
             self.debug_info(level = debugLevel)
             if saveDetail:
                 self.savelog(1)
             self.CURRENT_TIME = self.CURRENT_TIME + EPOCH_IN_MILLIS
         self.logjobtime()
+        self.logmachrate()
         print("Recv:", self.static_recv)
         print("Comp:", self.static_comp)
         print("Recv and Comp", self.static_recvcomp)
