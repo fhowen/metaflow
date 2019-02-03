@@ -17,14 +17,32 @@ class JobSet:
         self.jobsList.append(j)
 
     # shuffle the flows to make a sender may has multiple metaflows
-    def shuffleFlows(self):
-        for j in self.jobsList:
-            for r in j.reducerList:
-                m_list = r.mapperList
-                random.shuffle(m_list)
-                for i in range(0, len(r.flowList)):
-                    r.flowList[i].srcID = m_list[i] 
-        
+    def shuffleFlows(self, option):
+        base_dir = os.getcwd()
+        file_name = os.path.join(base_dir, 'dags', "shuffle.txt")
+        # randomly shuffle the flows
+        if option == 0:
+            f_open = open(file_name, 'w')
+            for j in self.jobsList:
+                for r in j.reducerList:
+                    m_list = r.mapperList
+                    random.shuffle(m_list)
+                    for i in range(0, len(r.flowList)):
+                        r.flowList[i].srcID = m_list[i] 
+                        f_open.write(str(m_list[i])+' ')
+                    f_open.write("\n")
+            f_open.close()
+        # read shuffle result from log
+        elif option == 1:
+            f_open = open(file_name, 'r')
+            for j in self.jobsList:
+                for r in j.reducerList:
+                    line = f_open.readline().strip()
+                    sp_line = line.split(' ')
+                    print(sp_line)
+                    for i in range(0, len(r.flowList)):
+                        r.flowList[i].srcID = int(sp_line[i])
+            f_open.close()
         
 
     # read coflow trace and add jobs
@@ -228,6 +246,11 @@ class JobSet:
                 j.storeSize()
             if dag_option == 1:
                 j.readSize()
+            # about shuffle 
+            if dag_option == 0:
+                self.shuffleFlows(0)
+            if dag_option == 1:
+                self.shuffleFlows(1)
 
     # store dag to .dot and .txt file
     def storeDag(self):
