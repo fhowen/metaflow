@@ -446,7 +446,7 @@ class Simulator:
                     self.recvBpsFree[RecvRack] = self.recvBpsFree[RecvRack] - min(idealbps, supportBps)
         self.active_flows = result_flows 
         
-    def simulate(self, EPOCH_IN_MILLIS, saveDetail = False, debugLevel=1):
+    def simulate(self, EPOCH_IN_MILLIS, saveDetail = False, debugLevel=0):
         curJob = 0
         TOTAL_JOBS = len(self.jobset.jobsList)
         while self.CURRENT_TIME<Constants.MAXTIME and (curJob<TOTAL_JOBS or self.numActiveJobs>0):

@@ -118,6 +118,7 @@ class Reducer:
         self.locationID = location_id
         self.submitTime = submit_time
         self.mapperList = mapper_list
+        #random.shuffle(self.mapperList)
         self.mapperNum = len(self.mapperList)
         # compu tasks number  
         #self.addTasks(2*len(mapper_list))

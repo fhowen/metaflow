@@ -16,6 +16,17 @@ class JobSet:
         j.set_attributes(submit_time, mapper_list, reducer_list, data_size_list)
         self.jobsList.append(j)
 
+    # shuffle the flows to make a sender may has multiple metaflows
+    def shuffleFlows(self):
+        for j in self.jobsList:
+            for r in j.reducerList:
+                m_list = r.mapperList
+                random.shuffle(m_list)
+                for i in range(0, len(r.flowList)):
+                    r.flowList[i].srcID = m_list[i] 
+        
+        
+
     # read coflow trace and add jobs
     def readTrace(self):
         base_dir = os.getcwd()
@@ -230,4 +241,6 @@ class JobSet:
             for r in j.reducerList:
                 r.txt2Dag()
                 r.initAlphaBeta()
+
+
 
