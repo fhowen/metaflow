@@ -109,12 +109,6 @@ class Simulator:
         f.write("\n")
         for i in range(totaltime):
             f.write(str(self.working_statics[i])+",") 
-        f.write("\n")
-        for i in range(totaltime):
-            if self.ideal_statics[i]>0:
-                f.write(str(self.working_statics[i]/self.ideal_statics[i])+",") 
-            else:
-                f.write("1,") 
 
     def savelog(self, wlength):
         logfile = "logfile"+time.strftime('%Y-%m-%d-%H-%M-%S',time.localtime(self.datetime))+".csv"
