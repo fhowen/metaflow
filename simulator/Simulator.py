@@ -402,6 +402,7 @@ class Simulator:
                         machine_bps = mach_fsize/maxtime
                         flownum = len(receiver_machine[recvid])
                         for rflow in receiver_machine[recvid]:
+                            rflow.currentBps = machine_bps/flownum
                             recvflow.append(rflow)
                     sendflow.sort(key=lambda x:x.flowID)
                     recvflow.sort(key=lambda x:x.flowID)
