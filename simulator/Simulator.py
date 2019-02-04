@@ -218,16 +218,12 @@ class Simulator:
                 machine_bps = mach_fsize/maxtime
                 flownum = len(receiver_machine[recvid])
                 for rflow in receiver_machine[recvid]:
-                    rflow.currentBps = machine_bps/flownum
+                    rflow.currentBps = min(rflow.currentBps, machine_bps/flownum)
                     recvflow.append(rflow)
-            sendflow.sort(key=lambda x:x.flowID)
             recvflow.sort(key=lambda x:x.flowID)
-            totalflownum = len(sendflow)
+            totalflownum = len(recvflow)
             for i in range(totalflownum):
-                if sendflow[i].currentBps > recvflow[i].currentBps:
-                    result_flows.append(recvflow[i])
-                else:
-                    result_flows.append(sendflow[i])
+                result_flows.append(recvflow[i])
                 curflow = result_flows[-1]
                 self.sendBpsFree[curflow.srcID] -= curflow.currentBps
                 self.recvBpsFree[curflow.dstID] -= curflow.currentBps
@@ -393,7 +389,6 @@ class Simulator:
                         for sflow in sender_machine[sendid]:
                             sflow.currentBps = machine_bps/flownum
                             sendflow.append(sflow)
-
                     recvflow = []
                     for recvid in receiver_machine.keys():
                         mach_fsize = 0.0
@@ -402,16 +397,12 @@ class Simulator:
                         machine_bps = mach_fsize/maxtime
                         flownum = len(receiver_machine[recvid])
                         for rflow in receiver_machine[recvid]:
-                            rflow.currentBps = machine_bps/flownum
+                            rflow.currentBps = min(rflow.currentBps, machine_bps/flownum)
                             recvflow.append(rflow)
-                    sendflow.sort(key=lambda x:x.flowID)
                     recvflow.sort(key=lambda x:x.flowID)
-                    mflownum = len(sendflow)
+                    mflownum = len(recvflow)
                     for i in range(mflownum):
-                        if sendflow[i].currentBps > recvflow[i].currentBps:
-                            result_flows.append(recvflow[i])
-                        else:
-                            result_flows.append(sendflow[i])
+                        result_flows.append(recvflow[i])
                         rflow = result_flows[-1]
                         self.sendBpsFree[rflow.srcID] -= rflow.currentBps
                         self.recvBpsFree[rflow.dstID] -= rflow.currentBps
@@ -447,7 +438,7 @@ class Simulator:
                     self.recvBpsFree[RecvRack] = self.recvBpsFree[RecvRack] - min(idealbps, supportBps)
         self.active_flows = result_flows 
         
-    def simulate(self, EPOCH_IN_MILLIS, saveDetail = False, debugLevel=0):
+    def simulate(self, EPOCH_IN_MILLIS, saveDetail = False, debugLevel=1):
         curJob = 0
         TOTAL_JOBS = len(self.jobset.jobsList)
         while self.CURRENT_TIME<Constants.MAXTIME and (curJob<TOTAL_JOBS or self.numActiveJobs>0):
