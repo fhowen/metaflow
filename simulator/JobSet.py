@@ -18,19 +18,33 @@ class JobSet:
 
     # shuffle the flows to make a sender may has multiple metaflows
     def shuffleFlows(self, option):
+        # define how to shuffle
+        random_shuffle = 0
         base_dir = os.getcwd()
         file_name = os.path.join(base_dir, 'dags', "shuffle.txt")
         # randomly shuffle the flows
         if option == 0:
             f_open = open(file_name, 'w')
             for j in self.jobsList:
-                for r in j.reducerList:
-                    m_list = r.mapperList
-                    random.shuffle(m_list)
-                    for i in range(0, len(r.flowList)):
-                        r.flowList[i].srcID = m_list[i] 
-                        f_open.write(str(m_list[i])+' ')
-                    f_open.write("\n")
+                # type 1 : random shuffle
+                if random_shuffle == 1:
+                    for r in j.reducerList:
+                        m_list = r.mapperList
+                        random.shuffle(m_list)
+                        for i in range(0, len(r.flowList)):
+                            r.flowList[i].srcID = m_list[i] 
+                            f_open.write(str(r.flowList[i].srcID)+' ')
+                        f_open.write("\n")
+                # type 2 : one by one shift
+                elif random_shuffle == 0:
+                    cursor = 0
+                    for r in j.reducerList:
+                        m_list = r.mapperList
+                        for i in range(0, len(r.flowList)):
+                            r.flowList[i].srcID = m_list[(i + cursor)%len(m_list)]
+                            f_open.write(str(r.flowList[i].srcID)+' ')
+                        f_open.write("\n")
+                        cursor += 1
             f_open.close()
         # read shuffle result from log
         elif option == 1:
