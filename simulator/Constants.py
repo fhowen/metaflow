@@ -12,7 +12,7 @@ ZERO = 0.001/(1048576*8)
 RACK_BITS_PER_SEC = 1.0 * 1024 * 1048576 # 1Gbps
 RACK_COMP_PER_SEC = 300.0
 C2F_RATIO = 1
-C2F_LIST = [2,1,0.5]
+C2F_LIST = [2, 1.25, 1, 0.5]
 # the ratio of hard barrier tasks
 HARD_RATIO= 0.2
 
