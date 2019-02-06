@@ -37,7 +37,8 @@ class Job:
             flow_sum += data_size_list[i]
             r.set_attributes(reducer_list[i], self.submitTime, mapper_list)
             self.reducerList.append(r)
-        compu_sum = (Constants.RACK_COMP_PER_SEC * flow_sum / Constants.RACK_BITS_PER_SEC )* Constants.C2F_RATIO
+        c2fRatio = random.choice(Constants.C2F_LIST)
+        compu_sum = (Constants.RACK_COMP_PER_SEC * flow_sum / Constants.RACK_BITS_PER_SEC )* c2fRatio
         for r in self.reducerList:
             r.totalFlops = compu_sum/len(self.reducerList)
 
