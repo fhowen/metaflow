@@ -66,6 +66,15 @@ class Reducer:
                 self.compuList[i-mapper_num].compuSize = self.totalFlops/compu_num
                 self.compuList[i-mapper_num].remainSize = self.compuList[i-mapper_num].compuSize
             self.printReducer()
+        elif self.dagType == Constants.HARDDAG:
+            for i in range(0, mapper_num):
+                # set flow size
+                self.flowList[i].flowSize = self.totalBytes/mapper_num
+                self.flowList[i].remainSize = self.flowList[i].flowSize
+            for i in range(mapper_num, mapper_num + compu_num):
+                # set compu size
+                self.compuList[i-mapper_num].compuSize = self.totalFlops/compu_num
+                self.compuList[i-mapper_num].remainSize = self.compuList[i-mapper_num].compuSize
         else:
             pass
 

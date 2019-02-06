@@ -200,7 +200,14 @@ class JobSet:
                             # random choose a node as father
                             father_node = random.randint(b_cur, f_cur)
                             dag.add_edge(father_node, j)
-            
+        # dag for tasks with hard barriers
+        elif dag_type == Constants.HARDDAG:
+            # one compunum
+            compu_num = 1
+            for i in range(0, mapper_num + 1):
+                dag.add_node(i)
+            for i in range(0, mapper_num):
+                dag.add_edge(i, mapper_num)
         else:
             pass
         return dag, compu_num
@@ -238,15 +245,21 @@ class JobSet:
         for j in self.jobsList:
             if dag_option == 0:
                 #1--- generate a dag
-                dag_type = Constants.DNNDAG
+                #dag_type = Constants.DNNDAG
                 #dag_type = Constants.WEBDAG
                 #dag_type = Constants.RANDOMDAG
+                random_point = random.random()
+                if random_point < Constants.HARD_RATIO:
+                    dag_type = Constants.HARDDAG
+                else:
+                    dag_type = Constants.DNNDAG
                 j.dagType = dag_type
                 j.dag, compu_num = self.createOneDag(dag_type, len(j.mapperList))
                 j.dag2Txt()
             elif dag_option == 1:
                 #2--- read a dag
                 dag_type, compu_num = j.txt2Dag()
+                j.dagType = dag_type
             else:
                 pass
             for r in j.reducerList:
