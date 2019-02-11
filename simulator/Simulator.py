@@ -438,71 +438,87 @@ class Simulator:
                     self.recvBpsFree[RecvRack] = self.recvBpsFree[RecvRack] - min(idealbps, supportBps)
         self.active_flows = result_flows 
         
-    def simulate(self, EPOCH_IN_MILLIS, saveDetail = False, debugLevel=1):
+    def simulate(self, EPOCH_IN_MILLIS, saveDetail = False, debugLevel=0):
         curJob = 0
         TOTAL_JOBS = len(self.jobset.jobsList)
+        cuaflownum = 0
+        cuacompnum = 0
+        update_tag = False
         while self.CURRENT_TIME<Constants.MAXTIME and (curJob<TOTAL_JOBS or self.numActiveJobs>0):
-            self.active_flows = []
-            self.active_Compus = []
-            jobsAdded = 0
-            #Step1: Add new jobs, Update the attitudes and Sort jobs
-            while curJob<TOTAL_JOBS:
-                job = self.jobset.jobsList[curJob]
-                if job.submitTime >= self.CURRENT_TIME + EPOCH_IN_MILLIS:
-                    break
-                jobsAdded = jobsAdded + 1
-                job.jobActive = Constants.SUBMITTED
-                self.numActiveJobs = self.numActiveJobs + 1
-                self.ActiveJobAdd(job)
-                curJob = curJob + 1
-            for ajob in self.active_jobs:
-                ajob.updateExpectedTime()
-                ajob.updateAlphaBeta()
-            if self.algorithm == "MDAG":
-                self.active_jobs.sort(key=lambda x:x.expectedTime)
-            #Step2: Extract flows and computes from jobs (+ calculate ideal_statics)
-            ideal_num = 0
-            working_mach = {}
-            for ajob in self.active_jobs:
-                for rtask in ajob.reducerList:
-                    if rtask.reducerActive == Constants.SUBMITTED \
-                        or rtask.reducerActive == Constants.STARTED:
-                        temp_list = list(range(0, len(rtask.flowList)))
-                        #random.shuffle(temp_list) # random the flow
-                        for index in temp_list:
-                            if rtask.flowList[index].remainSize > Constants.ZERO:
-                                self.active_flows.append(rtask.flowList[index])
-                        for compu in rtask.compuList:
-                            isready = compu.is_ready()
-                            if  compu.remainSize > Constants.ZERO:
-                                if compu.locationID not in working_mach.keys():
-                                    ideal_num += 1
-                                    working_mach[compu.locationID] = True
-                                if isready:
-                                    self.active_Compus.append(compu) 
-            self.ideal_statics.append(ideal_num)
-            #Step3: Allocate bandwidth and processors
-            self.resetBpsCpsFree()
-            if self.algorithm == "FIFO":
-                self.FIFO_Distribution(EPOCH_IN_MILLIS)
-            elif self.algorithm == "VARYS":
-                self.VARYS_Distribution(EPOCH_IN_MILLIS)
+            #for f in self.active_flows:
+            #    print(f.flowID)
+            #    print(f.remainSize)
+            if len(self.active_flows)<cuaflownum or len(self.active_Compus)<cuacompnum:
+                update_tag = True
             else:
-                self.MDAG_Distribution(EPOCH_IN_MILLIS)    
-            for comp in self.active_Compus:
-                RackId = comp.locationID
-                supportCps = self.rackCpsFree[RackId]
-                comp.currentCps = 0.0
-                if supportCps > Constants.ZERO:
-                    if comp.parentReducer.startTime>=Constants.MAXTIME:
-                        comp.parentReducer.startTime = self.CURRENT_TIME                    
-                    if comp.startTime>=Constants.MAXTIME:
-                        comp.startTime = self.CURRENT_TIME
-                    idealcps = comp.remainSize/(EPOCH_IN_MILLIS/1000)
-                    comp.currentCps = min(idealcps, supportCps)
-                    self.rackinfos[RackId].UsedCpsPro[comp.compuName] = comp.currentCps/Constants.RACK_COMP_PER_SEC
-                    self.rackCpsFree[RackId] = self.rackCpsFree[RackId] - comp.currentCps
-            #Step4: Start simulation including network and computation 
+                update_tag = False
+            cuaflownum = len(self.active_flows)
+            cuacompnum = len(self.active_Compus)
+            # if time window or a flow is completed or a compu is completed
+            if self.CURRENT_TIME%1000==0 or update_tag:
+                self.active_flows = []
+                self.active_Compus = []
+                jobsAdded = 0
+                #Step1: Add new jobs, Update the attitudes and Sort jobs
+                while curJob<TOTAL_JOBS:
+                    job = self.jobset.jobsList[curJob]
+                    if job.submitTime >= self.CURRENT_TIME + EPOCH_IN_MILLIS:
+                        break
+                    jobsAdded = jobsAdded + 1
+                    job.jobActive = Constants.SUBMITTED
+                    self.numActiveJobs = self.numActiveJobs + 1
+                    self.ActiveJobAdd(job)
+                    curJob = curJob + 1
+                for ajob in self.active_jobs:
+                    ajob.updateExpectedTime()
+                    ajob.updateAlphaBeta()
+                if self.algorithm == "MDAG":
+                    self.active_jobs.sort(key=lambda x:x.expectedTime)
+                #Step2: Extract flows and computes from jobs (+ calculate ideal_statics)
+                ideal_num = 0
+                working_mach = {}
+                for ajob in self.active_jobs:
+                    for rtask in ajob.reducerList:
+                        if rtask.reducerActive == Constants.SUBMITTED \
+                            or rtask.reducerActive == Constants.STARTED:
+                            temp_list = list(range(0, len(rtask.flowList)))
+                            #random.shuffle(temp_list) # random the flow
+                            for index in temp_list:
+                                if rtask.flowList[index].remainSize > Constants.ZERO:
+                                    self.active_flows.append(rtask.flowList[index])
+                            for compu in rtask.compuList:
+                                isready = compu.is_ready()
+                                if  compu.remainSize > Constants.ZERO:
+                                    if compu.locationID not in working_mach.keys():
+                                        ideal_num += 1
+                                        working_mach[compu.locationID] = True
+                                    if isready:
+                                        self.active_Compus.append(compu) 
+                self.ideal_statics.append(ideal_num)
+                #Step3: Allocate bandwidth and processors
+                self.resetBpsCpsFree()
+                if self.algorithm == "FIFO":
+                    self.FIFO_Distribution(EPOCH_IN_MILLIS)
+                elif self.algorithm == "VARYS":
+                    self.VARYS_Distribution(EPOCH_IN_MILLIS)
+                else:
+                    self.MDAG_Distribution(EPOCH_IN_MILLIS)    
+                for comp in self.active_Compus:
+                    RackId = comp.locationID
+                    supportCps = self.rackCpsFree[RackId]
+                    comp.currentCps = 0.0
+                    if supportCps > Constants.ZERO:
+                        if comp.parentReducer.startTime>=Constants.MAXTIME:
+                            comp.parentReducer.startTime = self.CURRENT_TIME                    
+                        if comp.startTime>=Constants.MAXTIME:
+                            comp.startTime = self.CURRENT_TIME
+                        idealcps = comp.remainSize/(EPOCH_IN_MILLIS/1000)
+                        comp.currentCps = min(idealcps, supportCps)
+                        self.rackinfos[RackId].UsedCpsPro[comp.compuName] = comp.currentCps/Constants.RACK_COMP_PER_SEC
+                        self.rackCpsFree[RackId] = self.rackCpsFree[RackId] - comp.currentCps
+            
+            #Step4: Start simulation including network and computation
+            delflows = [] 
             for flow in self.active_flows:
                 flow.remainSize = flow.remainSize - (EPOCH_IN_MILLIS/1000)*flow.currentBps
                 if flow.remainSize<Constants.ZERO and flow.finishTime>=Constants.MAXTIME:
@@ -512,6 +528,10 @@ class Simulator:
                     flow.update_graph()
                     if flow.parentReducer.finFlowNum>=len(flow.parentReducer.flowList):
                         flow.parentJob.flowFinishTime = self.CURRENT_TIME
+                    delflows.append(flow)
+            for df in delflows:
+                self.active_flows.remove(df)
+            delcomps = []
             for comp in self.active_Compus:
                 comp.remainSize = comp.remainSize - (EPOCH_IN_MILLIS/1000)*comp.currentCps
                 if comp.remainSize<Constants.ZERO and comp.finishTime>=Constants.MAXTIME:
@@ -529,6 +549,9 @@ class Simulator:
                             self.FinishedJobs.append(comp.parentJob.jobName)   
                             self.active_jobs.remove(comp.parentJob)   
                             self.numActiveJobs = self.numActiveJobs - 1
+                    delcomps.append(comp)
+            for dc in delcomps:
+                self.active_Compus.remove(dc)
             #Step5: Statistics
             self.debug_info(level = debugLevel)
             if saveDetail:
