@@ -103,10 +103,7 @@ class Simulator:
         logfile = "logmachrate-" + self.algorithm + ".csv"
         logpath = os.path.join(Constants.LOGDIR,logfile)
         f = open(logpath, 'w')
-        totaltime = len(self.ideal_statics)
-        for i in range(totaltime):
-            f.write(str(self.ideal_statics[i])+",")
-        f.write("\n")
+        totaltime = len(self.working_statics)
         for i in range(totaltime):
             f.write(str(self.working_statics[i])+",") 
 
