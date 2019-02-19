@@ -154,7 +154,7 @@ class Simulator:
                 jobCoflows[jobid] = []
                 jobCoflows[jobid].append(flow)
         jids = list(jobCoflows.keys())
-        jids.sort()
+        #jids.sort()
         for jid in jids:
             sender_machine = {}
             receiver_machine = {}
@@ -471,6 +471,8 @@ class Simulator:
                     ajob.updateAlphaBeta()
                 if self.algorithm == "MDAG":
                     self.active_jobs.sort(key=lambda x:x.expectedTime)
+                elif self.algorithm == "VARYS":
+                    self.active_jobs.sort(key=lambda x:x.cfExpectedtime)
                 #Step2: Extract flows and computes from jobs (+ calculate ideal_statics)
                 ideal_num = 0
                 working_mach = {}
