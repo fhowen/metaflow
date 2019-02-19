@@ -10,7 +10,7 @@ class Job:
     __slots__ = ['jobName', 'jobID', 'jobActive', 'submitTime', \
                  'startTime', 'finishTime', 'flowFinishTime', \
                  'finReducerNum', 'reducerList', 'mapperList', \
-                 'dag', 'dagType', 'expectedTime']
+                 'dag', 'dagType', 'expectedTime', 'cfExpectedtime']
     #job index from 1
     TotalJobNum = 1
     def __init__(self):
@@ -26,6 +26,7 @@ class Job:
         self.dag = nx.DiGraph()
         self.dagType = ''
         self.expectedTime = 0.0
+        self.cfExpectedtime = 0.0
         Job.TotalJobNum += 1
     
     def set_attributes(self, submit_time, mapper_list, reducer_list, data_size_list):
@@ -76,6 +77,7 @@ class Job:
         #Note: exceptedTime = max(flowtime, comptime)
         self.expectedTime = max(maxflow/Constants.RACK_BITS_PER_SEC, \
                             maxcomp/Constants.RACK_COMP_PER_SEC)
+        self.cfExpectedtime = maxflow/Constants.RACK_BITS_PER_SEC
     # update alpha beta with each flow    
     def updateAlphaBeta(self):
         for reducer in self.reducerList:
